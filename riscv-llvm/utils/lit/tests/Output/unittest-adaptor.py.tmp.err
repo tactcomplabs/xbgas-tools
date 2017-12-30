@@ -1,0 +1,36 @@
+runTest (lit.LitTestCase.LitTestCase)
+unittest-adaptor :: test-two.txt ... FAIL
+runTest (lit.LitTestCase.LitTestCase)
+unittest-adaptor :: test-one.txt ... ok
+
+======================================================================
+FAIL: runTest (lit.LitTestCase.LitTestCase)
+unittest-adaptor :: test-two.txt
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/lit-0.5.0.dev0-py2.7.egg/lit/LitTestCase.py", line 34, in runTest
+    self.fail(result.output)
+AssertionError: Script:
+--
+false
+--
+Exit Code: 1
+
+Command Output (stdout):
+--
+Command 0: "false"
+Command 0 Result: 1
+Command 0 Output:
+
+
+Command 0 Stderr:
+
+
+
+--
+
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.007s
+
+FAILED (failures=1)

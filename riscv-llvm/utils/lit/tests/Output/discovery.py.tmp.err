@@ -1,0 +1,9 @@
+lit.py: discovery.py:45: note: loading suite config '/home/shared/riscv128/riscv-tools/riscv-llvm/utils/lit/tests/Inputs/exec-discovery/lit.site.cfg'
+lit.py: LitConfig.py:97: note: load_config from '/home/shared/riscv128/riscv-tools/riscv-llvm/utils/lit/tests/Inputs/discovery/lit.cfg'
+lit.py: TestingConfig.py:103: note: ... loaded config '/home/shared/riscv128/riscv-tools/riscv-llvm/utils/lit/tests/Inputs/discovery/lit.cfg'
+lit.py: TestingConfig.py:103: note: ... loaded config '/home/shared/riscv128/riscv-tools/riscv-llvm/utils/lit/tests/Inputs/exec-discovery/lit.site.cfg'
+lit.py: discovery.py:118: note: resolved input '/home/shared/riscv128/riscv-tools/riscv-llvm/utils/lit/tests/../tests/Inputs/exec-discovery' to 'top-level-suite'::()
+lit.py: discovery.py:96: note: loading local config '/home/shared/riscv128/riscv-tools/riscv-llvm/utils/lit/tests/Inputs/discovery/subdir/lit.local.cfg'
+lit.py: TestingConfig.py:103: note: ... loaded config '/home/shared/riscv128/riscv-tools/riscv-llvm/utils/lit/tests/Inputs/discovery/subdir/lit.local.cfg'
+lit.py: discovery.py:45: note: loading suite config '/home/shared/riscv128/riscv-tools/riscv-llvm/utils/lit/tests/Inputs/discovery/subsuite/lit.cfg'
+lit.py: TestingConfig.py:103: note: ... loaded config '/home/shared/riscv128/riscv-tools/riscv-llvm/utils/lit/tests/Inputs/discovery/subsuite/lit.cfg'

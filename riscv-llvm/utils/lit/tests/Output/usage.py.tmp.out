@@ -1,0 +1,49 @@
+Usage: lit.py [options] {file-or-path}
+
+Options:
+  -h, --help            show this help message and exit
+  --version             Show version and exit
+  -j N, --threads=N     Number of testing threads
+  --config-prefix=NAME  Prefix for 'lit' config files
+  -D NAME=VAL, --param=NAME=VAL
+                        Add 'NAME' = 'VAL' to the user defined parameters
+
+  Output Format:
+    -q, --quiet         Suppress no error output
+    -s, --succinct      Reduce amount of output
+    -v, --verbose       Show test output for failures
+    -a, --show-all      Display all commandlines and output
+    -o PATH, --output=PATH
+                        Write test results to the provided path
+    --no-progress-bar   Do not use curses based progress bar
+    --show-unsupported  Show unsupported tests
+    --show-xfail        Show tests that were expected to fail
+
+  Test Execution:
+    --path=PATH         Additional paths to add to testing environment
+    --vg                Run tests under valgrind
+    --vg-leak           Check for memory leaks under valgrind
+    --vg-arg=ARG        Specify an extra argument for valgrind
+    --time-tests        Track elapsed wall time for each test
+    --no-execute        Don't execute any tests (assume PASS)
+    --xunit-xml-output=XUNIT_OUTPUT_FILE
+                        Write XUnit-compatible XML test reports to the
+                        specified file
+    --timeout=MAXINDIVIDUALTESTTIME
+                        Maximum time to spend running a single test (in
+                        seconds).0 means no time limit. [Default: 0]
+
+  Test Selection:
+    --max-tests=N       Maximum number of tests to run
+    --max-time=N        Maximum time to spend testing (in seconds)
+    --shuffle           Run tests in random order
+    -i, --incremental   Run modified and failing tests first (updates mtimes)
+    --filter=REGEX      Only run tests with paths matching the given regular
+                        expression
+
+  Debug and Experimental Options:
+    --debug             Enable debugging (for 'lit' development)
+    --show-suites       Show discovered test suites
+    --show-tests        Show all discovered tests
+    --use-processes     Run tests in parallel with processes (not threads)
+    --use-threads       Run tests in parallel with threads (not processes)
