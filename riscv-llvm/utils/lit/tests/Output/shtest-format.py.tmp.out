@@ -1,0 +1,128 @@
+-- Testing: 14 tests, 1 threads --
+PASS: shtest-format :: argv0.txt (1 of 14)
+FAIL: shtest-format :: external_shell/fail.txt (2 of 14)
+******************** TEST 'shtest-format :: external_shell/fail.txt' FAILED ********************
+Script:
+--
+echo "line 1: failed test output on stdout"
+echo "line 2: failed test output on stdout"
+cat "does-not-exist"
+--
+Exit Code: 1
+
+Command Output (stdout):
+--
+line 1: failed test output on stdout
+line 2: failed test output on stdout
+
+--
+Command Output (stderr):
+--
+cat: does-not-exist: No such file or directory
+
+--
+
+********************
+FAIL: shtest-format :: external_shell/fail_with_bad_encoding.txt (3 of 14)
+******************** TEST 'shtest-format :: external_shell/fail_with_bad_encoding.txt' FAILED ********************
+Script:
+--
+/home/shared/riscv128/riscv-tools/riscv-llvm/utils/lit/tests/Inputs/shtest-format/external_shell/write-bad-encoding.sh
+false
+--
+Exit Code: 1
+
+Command Output (stdout):
+--
+a line with bad encoding: Â.
+
+--
+
+********************
+PASS: shtest-format :: external_shell/pass.txt (4 of 14)
+FAIL: shtest-format :: fail.txt (5 of 14)
+******************** TEST 'shtest-format :: fail.txt' FAILED ********************
+Script:
+--
+printf "line 1: failed test output on stdout\nline 2: failed test output on stdout"
+false
+--
+Exit Code: 1
+
+Command Output (stdout):
+--
+Command 0: "printf" "line 1: failed test output on stdout\nline 2: failed test output on stdout"
+Command 0 Result: 0
+Command 0 Output:
+line 1: failed test output on stdout
+line 2: failed test output on stdout
+
+Command 0 Stderr:
+
+
+Command 1: "false"
+Command 1 Result: 1
+Command 1 Output:
+
+
+Command 1 Stderr:
+
+
+
+--
+
+********************
+UNRESOLVED: shtest-format :: no-test-line.txt (6 of 14)
+******************** TEST 'shtest-format :: no-test-line.txt' FAILED ********************
+Test has no run line!
+********************
+PASS: shtest-format :: pass.txt (7 of 14)
+UNSUPPORTED: shtest-format :: requires-missing.txt (8 of 14)
+PASS: shtest-format :: requires-present.txt (9 of 14)
+UNSUPPORTED: shtest-format :: unsupported_dir/some-test.txt (10 of 14)
+XFAIL: shtest-format :: xfail-feature.txt (11 of 14)
+XFAIL: shtest-format :: xfail-target.txt (12 of 14)
+XFAIL: shtest-format :: xfail.txt (13 of 14)
+XPASS: shtest-format :: xpass.txt (14 of 14)
+******************** TEST 'shtest-format :: xpass.txt' FAILED ********************
+Script:
+--
+true
+--
+Exit Code: 0
+
+Command Output (stdout):
+--
+Command 0: "true"
+Command 0 Result: 0
+Command 0 Output:
+
+
+Command 0 Stderr:
+
+
+
+--
+
+********************
+Testing Time: 0.02s
+********************
+Unexpected Passing Tests (1):
+    shtest-format :: xpass.txt
+
+********************
+Failing Tests (3):
+    shtest-format :: external_shell/fail.txt
+    shtest-format :: external_shell/fail_with_bad_encoding.txt
+    shtest-format :: fail.txt
+
+********************
+Unresolved Tests (1):
+    shtest-format :: no-test-line.txt
+
+  Expected Passes    : 4
+  Expected Failures  : 3
+  Unsupported Tests  : 2
+  Unresolved Tests   : 1
+  Unexpected Passes  : 1
+  Unexpected Failures: 3

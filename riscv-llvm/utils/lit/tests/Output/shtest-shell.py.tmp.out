@@ -1,0 +1,62 @@
+-- Testing: 6 tests, 1 threads --
+FAIL: shtest-shell :: error-0.txt (1 of 6)
+******************** TEST 'shtest-shell :: error-0.txt' FAILED ********************
+Script:
+--
+not-a-real-command
+--
+Exit Code: 127
+
+Command Output (stdout):
+--
+Command 0: "not-a-real-command"
+Command 0 Result: 127
+Command 0 Output:
+
+
+Command 0 Stderr:
+'not-a-real-command': command not found
+
+
+--
+
+********************
+FAIL: shtest-shell :: error-1.txt (2 of 6)
+******************** TEST 'shtest-shell :: error-1.txt' FAILED ********************
+shell parser error on: 'echo "missing quote'
+********************
+FAIL: shtest-shell :: error-2.txt (3 of 6)
+******************** TEST 'shtest-shell :: error-2.txt' FAILED ********************
+Script:
+--
+echo "hello" 3>&1
+--
+Exit Code: 127
+
+Command Output (stdout):
+--
+Command 0: "echo" "hello"
+Command 0 Result: 127
+Command 0 Output:
+
+
+Command 0 Stderr:
+Unsupported redirect: (('>&', 3), '1')
+
+
+--
+
+********************
+PASS: shtest-shell :: redirects.txt (4 of 6)
+PASS: shtest-shell :: sequencing-0.txt (5 of 6)
+XFAIL: shtest-shell :: sequencing-1.txt (6 of 6)
+Testing Time: 0.16s
+********************
+Failing Tests (3):
+    shtest-shell :: error-0.txt
+    shtest-shell :: error-1.txt
+    shtest-shell :: error-2.txt
+
+  Expected Passes    : 2
+  Expected Failures  : 1
+  Unexpected Failures: 3

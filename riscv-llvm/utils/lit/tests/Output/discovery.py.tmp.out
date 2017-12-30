@@ -1,0 +1,6 @@
+-- Test Suites --
+  exec-discovery-in-tree-suite - 1 tests
+    Source Root: /home/shared/riscv128/riscv-tools/riscv-llvm/utils/lit/tests/Inputs/exec-discovery-in-tree
+    Exec Root  : /home/shared/riscv128/riscv-tools/riscv-llvm/utils/lit/tests/Inputs/exec-discovery-in-tree/obj
+-- Available Tests --
+  exec-discovery-in-tree-suite :: test-one.txt

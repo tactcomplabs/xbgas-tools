@@ -1,0 +1,8 @@
+-- Testing: 1 tests, 1 threads --
+PASS: test-data :: metrics.ini (1 of 1)
+********** TEST 'test-data :: metrics.ini' RESULTS **********
+value0: 1 
+value1: 2.3456 
+**********
+Testing Time: 0.00s
+  Expected Passes    : 1

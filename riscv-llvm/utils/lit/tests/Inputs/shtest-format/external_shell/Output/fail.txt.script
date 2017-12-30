@@ -1,0 +1,3 @@
+set -o pipefail;{ echo "line 1: failed test output on stdout"; } &&
+{ echo "line 2: failed test output on stdout"; } &&
+{ cat "does-not-exist"; }

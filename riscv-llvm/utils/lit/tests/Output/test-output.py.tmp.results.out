@@ -1,0 +1,20 @@
+{
+  "__version__": [
+    0, 
+    5, 
+    0
+  ], 
+  "elapsed": 0.000514984130859375, 
+  "tests": [
+    {
+      "code": "PASS", 
+      "elapsed": 0.0003418922424316406, 
+      "metrics": {
+        "value0": 1, 
+        "value1": 2.3456
+      }, 
+      "name": "test-data :: metrics.ini", 
+      "output": "Test passed."
+    }
+  ]
+}

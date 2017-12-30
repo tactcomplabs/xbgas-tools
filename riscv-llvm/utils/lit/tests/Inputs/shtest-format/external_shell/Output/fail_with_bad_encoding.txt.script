@@ -1,0 +1,2 @@
+set -o pipefail;{ /home/shared/riscv128/riscv-tools/riscv-llvm/utils/lit/tests/Inputs/shtest-format/external_shell/write-bad-encoding.sh; } &&
+{ false; }
