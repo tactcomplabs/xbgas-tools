@@ -283,6 +283,7 @@ public:
   }
 
   void trigger_updated();
+  bool enable_xbgas();
 
 private:
   sim_t* sim;

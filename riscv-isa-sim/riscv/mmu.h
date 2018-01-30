@@ -218,13 +218,16 @@ public:
   void flush_icache();
 
   void register_memtracer(memtracer_t*);
+  // xbgas extensions
+  bool set_xbgas();
 
 private:
   sim_t* sim;
   processor_t* proc;
   memtracer_list_t tracer;
   uint16_t fetch_temp;
-
+  // xbgas extensions
+  bool xbgas_enable;
   // implement an instruction cache for simulator performance
   icache_entry_t icache[ICACHE_ENTRIES];
 

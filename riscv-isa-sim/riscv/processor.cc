@@ -54,6 +54,11 @@ static void bad_isa_string(const char* isa)
   abort();
 }
 
+bool processor_t::enable_xbgas(){
+  return mmu->set_xbgas();
+}
+
+
 void processor_t::parse_isa_string(const char* str)
 {
   std::string lowercase, tmp;

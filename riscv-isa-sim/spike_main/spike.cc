@@ -35,6 +35,8 @@ static void help()
   fprintf(stderr, "  --extlib=<name>       Shared library to load\n");
   fprintf(stderr, "  --rbb-port=<port>     Listen on <port> for remote bitbang connection\n");
   fprintf(stderr, "  --dump-dts  Print device tree string and exit\n");
+  fprintf(stderr, "----------- xBGAS Options -----------\n" );
+  fprintf(stderr, "  -x                    Enable xBGAS RV-128 Extionsions\n" );
   exit(1);
 }
 
@@ -84,6 +86,8 @@ int main(int argc, char** argv)
   const char* isa = DEFAULT_ISA;
   uint16_t rbb_port = 0;
   bool use_rbb = false;
+  // xbgas extensions
+  bool xbgas = false;
 
   option_parser_t parser;
   parser.help(&help);
@@ -104,12 +108,15 @@ int main(int argc, char** argv)
   parser.option(0, "extension", 1, [&](const char* s){extension = find_extension(s);});
   parser.option(0, "dump-dts", 0, [&](const char *s){dump_dts = true;});
   parser.option(0, "extlib", 1, [&](const char *s){
+
     void *lib = dlopen(s, RTLD_NOW | RTLD_GLOBAL);
     if (lib == NULL) {
       fprintf(stderr, "Unable to load extlib '%s': %s\n", s, dlerror());
       exit(-1);
     }
   });
+  // xBGAS Extensions
+  parser.option('x', 0, 0,[&](const char* s){xbgas = true;});
 
   auto argv1 = parser.parse(argv);
   std::vector<std::string> htif_args(argv1, (const char*const*)argv + argc);
@@ -140,6 +147,9 @@ int main(int argc, char** argv)
     if (dc) s.get_core(i)->get_mmu()->register_memtracer(&*dc);
     if (extension) s.get_core(i)->register_extension(extension());
   }
+
+  // xBGAS Extensions
+  if(xbgas) s.get_core(0)->enable_xbgas();
 
   s.set_debug(debug);
   s.set_log(log);

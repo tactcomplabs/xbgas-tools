@@ -18,6 +18,13 @@ mmu_t::~mmu_t()
 {
 }
 
+// xBGAS Extensions
+bool mmu_t::set_xbgas(){
+  xbgas_enable = true;
+  return true;
+}
+
+
 void mmu_t::flush_icache()
 {
   for (size_t i = 0; i < ICACHE_ENTRIES; i++)
