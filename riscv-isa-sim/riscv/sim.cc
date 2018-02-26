@@ -13,7 +13,6 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>
-
 volatile bool ctrlc_pressed = false;
 static void handle_signal(int sig)
 {
@@ -23,15 +22,17 @@ static void handle_signal(int sig)
   signal(sig, &handle_signal);
 }
 
+
 sim_t::sim_t(const char* isa, size_t nprocs, bool halted, reg_t start_pc,
              std::vector<std::pair<reg_t, mem_t*>> mems,
-             const std::vector<std::string>& args)
+             const std::vector<std::string>& args, std::pair<char*, size_t> shmem, int world_size, int rank, bool xbgas)
   : htif_t(args), debug_module(this), mems(mems), procs(std::max(nprocs, size_t(1))),
     start_pc(start_pc),
-    current_step(0), current_proc(0), debug(false), remote_bitbang(NULL)
+    current_step(0), current_proc(0), debug(false), remote_bitbang(NULL), x_mem(shmem), world_size(world_size), myid(rank), xbgas(xbgas)
 {
   signal(SIGINT, &handle_signal);
 
+  // by default, only one memory devices
   for (auto& x : mems)
     bus.add_device(x.first, x.second);
 
@@ -53,6 +54,40 @@ sim_t::~sim_t()
     delete procs[i];
   delete debug_mmu;
 }
+
+
+// Init the OLB table based on the # of MPI threads
+//     ==Local OLB (myid = 2)== 
+//     ------------------------     
+//     | addr = tid+1 |  tid  |
+//	   |--------------|-------| 
+//		 | 		 0x00 		|  myid |
+//		 |--------------|-------|
+//		 |     0x01			|	  0   |
+//	   |--------------|-------|
+//		 | 		 0x02     |   1   |
+//		 |--------------|-------|
+//		 |		 0x04     |   3   | 
+//     |--------------|-------|
+//  OLB.addr 0x00 is always reserved for the local access            
+//  Other addr = tid + 1 
+//  In remote OLB, myid corresponds to the addr = myid + 1 
+//  So, the OLBs in different nodes are consistent.
+
+int sim_t::olb_init()
+{
+	if (!xbgas)
+		return 0;
+
+  olb.push_back(std::make_pair( 0x0, myid));
+  for(int tid = 0; tid < world_size; tid++){
+		if(tid == myid)
+	  	continue;
+		olb.push_back(std::make_pair((uint64_t)(tid+1), tid));
+	}
+	return 0;
+}
+
 
 void sim_thread_main(void* arg)
 {

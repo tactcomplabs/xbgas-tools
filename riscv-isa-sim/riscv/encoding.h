@@ -167,7 +167,7 @@
 #define PTE_D     0x080 // Dirty
 #define PTE_SOFT  0x300 // Reserved for Software
 
-#define PTE_PPN_SHIFT 10
+#define PTE_PPN_SHIFT 10 // Shift inside the PTE entries for PA
 
 #define PTE_TABLE(PTE) (((PTE) & (PTE_V | PTE_R | PTE_W | PTE_X)) == PTE_V)
 

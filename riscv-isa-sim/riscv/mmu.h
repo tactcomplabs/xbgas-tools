@@ -12,9 +12,15 @@
 #include "memtracer.h"
 #include <stdlib.h>
 #include <vector>
-
+#include <encoding.h>
+#include <iostream>
 // virtual memory configuration
+// Ensure the PGSHIFT is consistent with the page size
+#ifdef RISCV_PGSHIFT
+#define PGSHIFT RISCV_PGSHIFT
+#else
 #define PGSHIFT 12
+#endif
 const reg_t PGSIZE = 1 << PGSHIFT;
 const reg_t PGMASK = ~(PGSIZE-1);
 
@@ -228,6 +234,7 @@ private:
   uint16_t fetch_temp;
   // xbgas extensions
   bool xbgas_enable;
+
   // implement an instruction cache for simulator performance
   icache_entry_t icache[ICACHE_ENTRIES];
 
@@ -306,6 +313,10 @@ struct vm_info {
 
 inline vm_info decode_vm_info(int xlen, reg_t prv, reg_t sptbr)
 {
+#ifdef DEBUG
+  std::cout << "sptbr value is "<< std::hex << sptbr << std::endl;
+  std::cout << "xlen is " << xlen <<std::endl; 
+#endif
   if (prv == PRV_M) {
     return {0, 0, 0, 0};
   } else if (prv <= PRV_S && xlen == 32) {

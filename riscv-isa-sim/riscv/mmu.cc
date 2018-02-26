@@ -51,13 +51,13 @@ reg_t mmu_t::translate(reg_t addr, access_type type)
       mode = get_field(proc->state.mstatus, MSTATUS_MPP);
   }
 
-  return walk(addr, type, mode) | (addr & (PGSIZE-1));
+  return walk(addr, type, mode) | (addr & (PGSIZE-1)); // base PPN | PG offset
 }
 
 tlb_entry_t mmu_t::fetch_slow_path(reg_t vaddr)
 {
   reg_t paddr = translate(vaddr, FETCH);
-
+  // host_addr is the real address (va) in the allocted memory 
   if (auto host_addr = sim->addr_to_mem(paddr)) {
     return refill_tlb(vaddr, paddr, host_addr, FETCH);
   } else {
@@ -140,6 +140,7 @@ void mmu_t::store_slow_path(reg_t addr, reg_t len, const uint8_t* bytes)
 
 tlb_entry_t mmu_t::refill_tlb(reg_t vaddr, reg_t paddr, char* host_addr, access_type type)
 {
+  // index = VPN % 256
   reg_t idx = (vaddr >> PGSHIFT) % TLB_ENTRIES;
   reg_t expected_tag = vaddr >> PGSHIFT;
 
@@ -158,7 +159,9 @@ tlb_entry_t mmu_t::refill_tlb(reg_t vaddr, reg_t paddr, char* host_addr, access_
   if (type == FETCH) tlb_insn_tag[idx] = expected_tag;
   else if (type == STORE) tlb_store_tag[idx] = expected_tag;
   else tlb_load_tag[idx] = expected_tag;
+  
 
+  // host_addr - vaddr  =   real_VA - sim_VA
   tlb_entry_t entry = {host_addr - vaddr, paddr - vaddr};
   tlb_data[idx] = entry;
   return entry;
@@ -181,19 +184,36 @@ reg_t mmu_t::walk(reg_t addr, access_type type, reg_t mode)
   if (masked_msbs != 0 && masked_msbs != mask)
     vm.levels = 0;
 
+  // Page table base address.
+  // By default, xlen = 40, SPTBR_MODE_SV39, it is 0x80016000
   reg_t base = vm.ptbase;
+#ifdef DEBUG
+  std::cout << " vm.levels  = "<< vm.levels
+            << " vm.idxbits = "<< vm.idxbits
+	    << " vm.ptesize = "<< vm.ptesize
+            << std::endl;
+#endif
+  // process the multi-level page-tables
   for (int i = vm.levels - 1; i >= 0; i--) {
     int ptshift = i * vm.idxbits;
     reg_t idx = (addr >> (PGSHIFT + ptshift)) & ((1 << vm.idxbits) - 1);
 
     // check that physical address of PTE is legal
+    // ppte is the real VA of the allocated memory for spike
     auto ppte = sim->addr_to_mem(base + idx * vm.ptesize);
     if (!ppte)
       throw trap_load_access_fault(addr);
-
+    
+    // check whether the it is 32 or 64 bits
     reg_t pte = vm.ptesize == 4 ? *(uint32_t*)ppte : *(uint64_t*)ppte;
     reg_t ppn = pte >> PTE_PPN_SHIFT;
 
+#ifdef DEBUG
+  std::cout << " ppte  = "<<  std::hex << &ppte
+            << " pte   = "<<  std::hex << pte
+	    << " ppn   = "<<  std::hex << ppn
+            << std::endl;
+#endif
     if (PTE_TABLE(pte)) { // next level of page table
       base = ppn << PGSHIFT;
     } else if ((pte & PTE_U) ? s_mode && (type == FETCH || !sum) : !s_mode) {
@@ -219,7 +239,11 @@ reg_t mmu_t::walk(reg_t addr, access_type type, reg_t mode)
       // for superpage mappings, make a fake leaf PTE for the TLB's benefit.
       reg_t vpn = addr >> PGSHIFT;
       reg_t value = (ppn | (vpn & ((reg_t(1) << ptshift) - 1))) << PGSHIFT;
-      return value;
+      
+#ifdef DEBUG
+      std::cout << "Final output address is " << std::hex << value << std::endl; 
+#endif       
+      return value; // base addr of the mapped phsycial page
     }
   }
 

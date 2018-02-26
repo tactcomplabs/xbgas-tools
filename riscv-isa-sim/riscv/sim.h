@@ -21,7 +21,8 @@ class sim_t : public htif_t
 public:
   sim_t(const char* isa, size_t _nprocs,  bool halted, reg_t start_pc,
         std::vector<std::pair<reg_t, mem_t*>> mems,
-        const std::vector<std::string>& args);
+        const std::vector<std::string>& args, std::pair<char*, size_t> x_mem,
+				int world_size, int myid, bool xbgas);
   ~sim_t();
 
   // run the simulation to completion
@@ -39,6 +40,9 @@ public:
 
   debug_module_t debug_module;
 
+	// xbgas extension
+	int olb_init();
+
 private:
   std::vector<std::pair<reg_t, mem_t*>> mems;
   mmu_t* debug_mmu;  // debug port into main memory
@@ -48,6 +52,7 @@ private:
   std::unique_ptr<rom_device_t> boot_rom;
   std::unique_ptr<clint_t> clint;
   bus_t bus;
+  
 
   processor_t* get_core(const std::string& i);
   void step(size_t n); // step through simulation
@@ -61,6 +66,14 @@ private:
   bool histogram_enabled; // provide a histogram of PCs
   remote_bitbang_t* remote_bitbang;
 
+  //xBGAS_extensions
+  std::pair<char*, size_t> x_mem;
+  std::vector<std::pair<uint64_t, int>> olb;
+	int world_size;
+	int	myid;
+	bool xbgas;
+
+  
   // memory-mapped I/O routines
   char* addr_to_mem(reg_t addr);
   bool mmio_load(reg_t addr, size_t len, uint8_t* bytes);

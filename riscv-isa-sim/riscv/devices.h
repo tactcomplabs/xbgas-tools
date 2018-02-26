@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <iostream>
 
 class processor_t;
 
@@ -42,6 +43,7 @@ class mem_t : public abstract_device_t {
  public:
   mem_t(size_t size) : len(size) {
     data = (char*)calloc(1, size);
+    //std::cout << "The allocated memory starts at the address: "<< std::hex << data <<std::endl;
     if (!data)
       throw std::runtime_error("couldn't allocate " + std::to_string(size) + " bytes of target memory");
   }
@@ -66,9 +68,9 @@ class clint_t : public abstract_device_t {
   size_t size() { return CLINT_SIZE; }
   void increment(reg_t inc);
  private:
-  typedef uint64_t mtime_t;
-  typedef uint64_t mtimecmp_t;
-  typedef uint32_t msip_t;
+  typedef uint64_t mtime_t; 	// memory mapped CSRs (Timer Interupts)
+  typedef uint64_t mtimecmp_t; 	// memory mapped CSRs (Timer Interupts)
+  typedef uint32_t msip_t;	// memory mapped CSRs (Machine Software Interrupts)
   std::vector<processor_t*>& procs;
   mtime_t mtime;
   std::vector<mtimecmp_t> mtimecmp;
