@@ -88,6 +88,15 @@ int sim_t::olb_init()
 	return 0;
 }
 
+int sim_t::olb_visit(reg_t addr)
+{
+	uint64_t i;
+	for (i = 0; i < olb.size(); i++){
+		if(likely(olb[i].first == addr))
+				return olb[i].second;
+	}
+  return -1;
+}
 
 void sim_thread_main(void* arg)
 {

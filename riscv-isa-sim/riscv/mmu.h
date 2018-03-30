@@ -54,6 +54,7 @@ class trigger_matched_t
     reg_t data;
 };
 
+
 // this class implements a processor's port into the virtual memory system.
 // an MMU and instruction cache are maintained for simulator performance.
 class mmu_t
@@ -117,6 +118,24 @@ public:
   load_func(int16)
   load_func(int32)
   load_func(int64)
+
+
+  // template for functions that load an aligned value from remote meemory devices
+  #define xbgas_load_func(type) \
+    inline type##_t xbgas_load_##type(reg_t upper, reg_t lower) { \
+		  std::cout << "Into function xbgas_load()\n";\
+		  int target = sim->olb_visit(upper);\
+			if (unlikely(target == -1))\
+				throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
+      type##_t res; \
+      load_remote_path(target, lower, sizeof(type##_t), (uint8_t*)&res); \
+      return res; \
+    }
+ 
+  // load value from remote memory at aligned address; zero extend to register width
+	xbgas_load_func(uint64)
+	xbgas_load_func(uint32)
+
 
   // template for functions that store an aligned value to memory
   #define store_func(type) \
@@ -222,7 +241,7 @@ public:
 
   void flush_tlb();
   void flush_icache();
-
+  void load_remote_path(int target, reg_t addr, reg_t len, uint8_t* bytes);
   void register_memtracer(memtracer_t*);
   // xbgas extensions
   bool set_xbgas();

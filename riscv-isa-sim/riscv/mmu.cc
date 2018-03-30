@@ -3,7 +3,7 @@
 #include "mmu.h"
 #include "sim.h"
 #include "processor.h"
-
+#include <mpi.h>
 mmu_t::mmu_t(sim_t* sim, processor_t* proc)
  : sim(sim), proc(proc),
   check_triggers_fetch(false),
@@ -92,6 +92,37 @@ reg_t reg_from_bytes(size_t len, const uint8_t* bytes)
         (((reg_t) bytes[7]) << 56);
   }
   abort();
+}
+
+
+// NOTE: currently used to trasnfer a "single" data element between two threadsbased on the upper 64-bit address stored in OLB
+void mmu_t::load_remote_path(int target, reg_t addr, reg_t len, uint8_t* bytes)
+{
+	int rank	=	sim->myid;
+	MPI_Status status;
+	
+	
+	//Target thread
+	if( rank == target){
+		MPI_Request recv_req;
+		char* p = sim->x_mem.first;
+		reg_t dest;
+		MPI_Recv(&dest, 1, MPI_INT, sim->world_size - target + 1, 0, MPI_COMM_WORLD, &status);
+		MPI_Send(sim->x_mem.first + dest, len, MPI_UINT8_T, sim->world_size - target + 1, 1, MPI_COMM_WORLD);
+	}
+
+
+	//Requster thread
+	//NOTE: This only works when we have only 2 threads
+	else if( rank == sim->myid ){
+	  std::pair<reg_t, reg_t> message;	
+    message = std::make_pair(len, (addr -  (reg_t)(sim->x_mem.first)));
+		MPI_Request send_req;
+		MPI_Send(&message.second, 1, MPI_INT, target, 0, MPI_COMM_WORLD); 
+		MPI_Recv(bytes, len, MPI_UINT8_T, target, 1, MPI_COMM_WORLD, &status );
+		
+	}
+
 }
 
 void mmu_t::load_slow_path(reg_t addr, reg_t len, uint8_t* bytes)

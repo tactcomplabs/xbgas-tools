@@ -92,6 +92,8 @@ struct state_t
   reg_t pc;
   regfile_t<reg_t, NXPR, true> XPR;
   regfile_t<freg_t, NFPR, false> FPR;
+	// register group for xbgas extensions
+	regfile_t<reg_t, NXBR, false> XBR;
 
   // control and status registers
   reg_t prv;    // TODO: Can this be an enum instead?

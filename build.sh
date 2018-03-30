@@ -9,7 +9,7 @@ echo "Starting RISC-V Toolchain build process"
 
 build_project riscv-openocd --prefix=$RISCV --enable-remote-bitbang --enable-jtag_vpi --disable-werror
 build_project riscv-fesvr --prefix=$RISCV
-build_project riscv-isa-sim --prefix=$RISCV --with-fesvr=$RISCV
+build_project riscv-isa-sim --prefix=$RISCV --with-fesvr=$RISCV CXX=mpicxx CC=mpicc
 build_project riscv-gnu-toolchain --prefix=$RISCV
 CC= CXX= build_project riscv-pk --prefix=$RISCV --host=riscv64-unknown-elf
 build_project riscv-tests --prefix=$RISCV/riscv64-unknown-elf

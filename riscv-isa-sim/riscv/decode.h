@@ -27,6 +27,8 @@ typedef uint64_t reg_t;
 const int NXPR = 32;
 const int NFPR = 32;
 const int NCSR = 4096;
+//xbgas extensions
+const int NXBR = 32;
 
 #define X_RA 1
 #define X_SP 2
@@ -100,6 +102,11 @@ public:
   uint64_t rvc_rs2() { return x(2, 5); }
   uint64_t rvc_rs1s() { return 8 + x(7, 3); }
   uint64_t rvc_rs2s() { return 8 + x(2, 3); }
+
+  // xbgas extensions
+	//uint64_t ext(uint64_t index ) {return }
+
+
 private:
   insn_bits_t b;
   uint64_t x(int lo, int len) { return (b >> lo) & ((insn_bits_t(1) << len)-1); }
@@ -128,6 +135,11 @@ private:
 #define MMU (*p->get_mmu())
 #define STATE (*p->get_state())
 #define READ_REG(reg) STATE.XPR[reg]
+
+// xbgas extensions for Integer Load/Store Instructions
+#define READ_XBREG(reg) STATE.XBR[reg]
+#define EXT1 READ_XBREG(insn.rs1())
+
 #define READ_FREG(reg) STATE.FPR[reg]
 #define RS1 READ_REG(insn.rs1())
 #define RS2 READ_REG(insn.rs2())
