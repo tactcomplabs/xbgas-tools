@@ -242,3 +242,16 @@ static uint32_t srli(unsigned int dest, unsigned int src, uint8_t shamt)
 		(dest << 7) |
 		MATCH_SRLI;
 }
+
+
+
+
+static uint32_t eld(unsigned int rd, unsigned int base, uint16_t offset) __attribute__ ((unused));
+static uint32_t eld(unsigned int rd, unsigned int base, uint16_t offset)
+{
+  return (bits(offset, 11, 0) << 20) |
+    (base << 15) |
+    (bits(rd, 4, 0) << 7) |
+    MATCH_ELD;
+}
+

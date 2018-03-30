@@ -135,6 +135,13 @@ public:
   // load value from remote memory at aligned address; zero extend to register width
 	xbgas_load_func(uint64)
 	xbgas_load_func(uint32)
+	xbgas_load_func(uint16)
+	xbgas_load_func(uint8)
+
+	xbgas_load_func(int64)
+	xbgas_load_func(int32)
+	xbgas_load_func(int16)
+	xbgas_load_func(int8)
 
 
   // template for functions that store an aligned value to memory
