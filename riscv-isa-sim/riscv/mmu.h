@@ -123,7 +123,9 @@ public:
   // template for functions that load an aligned value from remote meemory devices
   #define xbgas_load_func(type) \
     inline type##_t xbgas_load_##type(reg_t upper, reg_t lower) { \
-		  std::cout << "Into function xbgas_load()\n";\
+		  upper = 1;\
+			if (upper == 0)\
+				return load_##type(lower);\
 		  int target = sim->olb_visit(upper);\
 			if (unlikely(target == -1))\
 				throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
@@ -132,6 +134,8 @@ public:
       return res; \
     }
  
+		  //std::cout << "Target thread is "<< target<<"\n";\
+		  //std::cout << "Into function xbgas_load()\n";
   // load value from remote memory at aligned address; zero extend to register width
 	xbgas_load_func(uint64)
 	xbgas_load_func(uint32)

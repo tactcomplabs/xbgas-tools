@@ -22,7 +22,7 @@ public:
   sim_t(const char* isa, size_t _nprocs,  bool halted, reg_t start_pc,
         std::vector<std::pair<reg_t, mem_t*>> mems,
         const std::vector<std::string>& args, std::pair<char*, size_t> x_mem,
-				int world_size, int myid, bool xbgas);
+				int world_size, int myid, int xbgas);
   ~sim_t();
 
   // run the simulation to completion
@@ -72,7 +72,7 @@ private:
   std::vector<std::pair<uint64_t, int>> olb;
 	int world_size;
 	int	myid;
-	bool xbgas;
+	int xbgas;
 
   
   // memory-mapped I/O routines

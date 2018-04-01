@@ -25,7 +25,7 @@ static void handle_signal(int sig)
 
 sim_t::sim_t(const char* isa, size_t nprocs, bool halted, reg_t start_pc,
              std::vector<std::pair<reg_t, mem_t*>> mems,
-             const std::vector<std::string>& args, std::pair<char*, size_t> shmem, int world_size, int rank, bool xbgas)
+             const std::vector<std::string>& args, std::pair<char*, size_t> shmem, int world_size, int rank, int xbgas)
   : htif_t(args), debug_module(this), mems(mems), procs(std::max(nprocs, size_t(1))),
     start_pc(start_pc),
     current_step(0), current_proc(0), debug(false), remote_bitbang(NULL), x_mem(shmem), world_size(world_size), myid(rank), xbgas(xbgas)
@@ -67,6 +67,8 @@ sim_t::~sim_t()
 //	   |--------------|-------|
 //		 | 		 0x02     |   1   |
 //		 |--------------|-------|
+//		 | 		 0x03     |   2   |
+//		 |--------------|-------|
 //		 |		 0x04     |   3   | 
 //     |--------------|-------|
 //  OLB.addr 0x00 is always reserved for the local access            
@@ -76,13 +78,13 @@ sim_t::~sim_t()
 
 int sim_t::olb_init()
 {
-	if (!xbgas)
-		return 0;
+	if (xbgas == 0)
+		return -1;
 
   olb.push_back(std::make_pair( 0x0, myid));
   for(int tid = 0; tid < world_size; tid++){
-		if(tid == myid)
-	  	continue;
+		//if(tid == myid)
+	  	//continue;
 		olb.push_back(std::make_pair((uint64_t)(tid+1), tid));
 	}
 	return 0;

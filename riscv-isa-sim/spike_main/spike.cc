@@ -13,6 +13,9 @@
 #include <string>
 #include <memory>
 #include <mpi.h>
+
+
+//#define DEBUG
 static void help()
 {
   fprintf(stderr, "usage: spike [host options] <target program> [target options]\n");
@@ -46,13 +49,16 @@ static std::pair<char*, size_t> make_shared_mem(const char* arg)
   char* p;
   auto mb = strtoull(arg, &p, 0);
   if (*p == 0) {
-    reg_t size = reg_t(mb) << 20;
+    reg_t size = (reg_t(mb) << 20);
     p = (char*)calloc(1, size);
+#ifdef DEBUG
+		//std::cout << "x_mem addr = " << std::hex<<(uint64_t)p << "\n";
+#endif
     if(!p) 
-	throw std::runtime_error("couldn't allocate " + std::to_string(size) + " bytes of xBGAS shared memory");
+		throw std::runtime_error("couldn't allocate " + std::to_string(size) + " bytes of xBGAS shared memory");
     return std::make_pair(p, size);
   }
-  return std::make_pair((char*)NULL, 0);
+  	return std::make_pair((char*)NULL, 0);
 }
 
 static std::vector<std::pair<reg_t, mem_t*>> make_mems(const char* arg)
@@ -103,10 +109,11 @@ int main(int argc, char** argv)
   bool use_rbb = false;
   int ret;
   // xbgas extensions
-  bool 	xbgas 			= false;
+  int 	xbgas 			= 0;
   int	 	rank	  		= 0; 
 	int 	world_size	= 0; 
   std::pair<char*, size_t> shared_mem;
+  MPI_Init(&argc, &argv);
 
   option_parser_t parser;
   parser.help(&help);
@@ -119,7 +126,10 @@ int main(int argc, char** argv)
   // I wanted to use --halted, but for some reason that doesn't work.
   parser.option('H', 0, 0, [&](const char* s){halted = true;});
   // xBGAS Extensions
-  parser.option('x', 0, 1, [&](const char* s){xbgas = true; shared_mem = make_shared_mem(s);});
+  parser.option('x', 0, 1, [&](const char* s){
+		xbgas = 1; 
+		shared_mem = make_shared_mem(s);
+		});
   parser.option(0, "rbb-port", 1, [&](const char* s){use_rbb = true; rbb_port = atoi(s);});
   parser.option(0, "pc", 1, [&](const char* s){start_pc = strtoull(s, 0, 0);});
   parser.option(0, "ic", 1, [&](const char* s){ic.reset(new icache_sim_t(s));});
@@ -136,10 +146,18 @@ int main(int argc, char** argv)
       exit(-1);
     }
   });
-   
-  MPI_Init(&argc, &argv);
   // Init the xBGAS extensions 
+	
+
+  auto argv1 = parser.parse(argv);
+  std::vector<std::string> htif_args(argv1, (const char*const*)argv + argc);
+  if (mems.empty())
+    mems = make_mems("2048");
+
   if(xbgas){
+#ifdef DEBUG		
+    std::cout << "xbgas = " << xbgas << "\n";
+#endif
     char 	processor_name[MPI_MAX_PROCESSOR_NAME];
     int	 	name_len;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
@@ -154,20 +172,16 @@ int main(int argc, char** argv)
 #endif
 		 
   }
-	
-
-  auto argv1 = parser.parse(argv);
-  std::vector<std::string> htif_args(argv1, (const char*const*)argv + argc);
-  if (mems.empty())
-    mems = make_mems("2048");
-
   //if(xbgas == true && shared_mem.first == NULL)
   //shared_mem = make_shared_mem("512");
-
+#ifdef DEBUG
+  std::cout << "shared memory address is " <<std::hex<< (uint64_t)shared_mem.first<<"\n";
+#endif
   sim_t s(isa, nprocs, halted, start_pc, mems, htif_args, shared_mem, world_size, rank, xbgas);
 	// Init OLB in each core 
   if (xbgas){
-		s.olb_init();
+		if(s.olb_init() == -1)
+			throw std::runtime_error("olb init failed\n");
 	}
 
 

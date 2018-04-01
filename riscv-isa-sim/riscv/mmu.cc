@@ -100,29 +100,44 @@ void mmu_t::load_remote_path(int target, reg_t addr, reg_t len, uint8_t* bytes)
 {
 	int rank	=	sim->myid;
 	MPI_Status status;
-	
-	
+   	
+	// Temporarily go through the MMU address translation
+  reg_t paddr = translate(addr, LOAD);
+  auto host_addr = sim->addr_to_mem(paddr);
+
+
 	//Target thread
 	if( rank == target){
 		MPI_Request recv_req;
 		char* p = sim->x_mem.first;
-		reg_t dest;
-		MPI_Recv(&dest, 1, MPI_INT, sim->world_size - target + 1, 0, MPI_COMM_WORLD, &status);
-		MPI_Send(sim->x_mem.first + dest, len, MPI_UINT8_T, sim->world_size - target + 1, 1, MPI_COMM_WORLD);
+		reg_t offset;
+#ifdef DEBUG
+  	std::cout << "Thread " << rank << " execute the extended integer load function calls\n"; 
+#endif
+		MPI_Recv(&offset, 1, MPI_UINT64_T, sim->world_size - target - 1, 0, MPI_COMM_WORLD, &status);
+  	//std::cout << "Target Thread " << rank << " received the address offset: "<< offset <<" \n"; 
+		//MPI_Send((uint8_t*)(sim->x_mem.first + offset), len, MPI_UINT8_T, sim->world_size - target - 1, 1, MPI_COMM_WORLD);
+		MPI_Send((uint8_t*)(host_addr), len, MPI_UINT8_T, sim->world_size - target - 1, 1, MPI_COMM_WORLD);
 	}
 
 
 	//Requster thread
 	//NOTE: This only works when we have only 2 threads
-	else if( rank == sim->myid ){
+	else if(rank == sim->world_size - target - 1){
 	  std::pair<reg_t, reg_t> message;	
     message = std::make_pair(len, (addr -  (reg_t)(sim->x_mem.first)));
+#ifdef DEBUG
+  	std::cout << "Thread " << rank << " execute the extended integer load function calls\n"; 
+#endif
 		MPI_Request send_req;
-		MPI_Send(&message.second, 1, MPI_INT, target, 0, MPI_COMM_WORLD); 
+		MPI_Send(&message.second, 1, MPI_UINT64_T, target, 0, MPI_COMM_WORLD); 
+  	//std::cout << "Requestor Thread " << rank << " sent the address offset: "<< message.second <<"\n"; 
 		MPI_Recv(bytes, len, MPI_UINT8_T, target, 1, MPI_COMM_WORLD, &status );
 		
 	}
-
+#ifdef DEBUG
+  std::cout << "thread " << rank << " complete the extended integer load function calls\n"; 
+#endif
 }
 
 void mmu_t::load_slow_path(reg_t addr, reg_t len, uint8_t* bytes)
