@@ -4,6 +4,7 @@
 #include "sim.h"
 #include "processor.h"
 #include <mpi.h>
+//#define DEBUG
 mmu_t::mmu_t(sim_t* sim, processor_t* proc)
  : sim(sim), proc(proc),
   check_triggers_fetch(false),
@@ -95,8 +96,42 @@ reg_t reg_from_bytes(size_t len, const uint8_t* bytes)
 }
 
 
+void mmu_t::store_remote_path(int64_t target, reg_t addr, reg_t len,uint8_t* bytes )
+{
+	int rank	=	sim->myid;
+	// Temporarily go through the MMU address translation
+  reg_t paddr = translate(addr, STORE);
+  auto host_addr = sim->addr_to_mem(paddr);
+#ifdef DEBUG
+  	std::cout << "DEBUG:: Thread " << rank << ", Host Addr = 0x"<< (reg_t)host_addr 
+		<< ", device addr = " << (reg_t)(sim->mems[0].second->contents()) <<"\n"; 
+  	std::cout << "Thread " << rank << ", address offset = 0x"<< (reg_t)host_addr - (reg_t)(sim->mems[0].second->contents()) <<"\n"; 
+#endif
+
+ 	MPI_Win_fence(0, sim->win); 	
+	//Target thread
+	if( rank == target ){
+#ifdef DEBUG
+  	std::cout << "DEBUG::  Thread " << rank << " executing the xbgas store\n"; 
+#endif
+	}else{ //Requster thread
+#ifdef DEBUG
+  	std::cout << "Thread " << rank << " executing the xbgas store\n"; 
+#endif
+	MPI_Put(bytes, len, MPI_UINT8_T, target, (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()), len, MPI_UINT8_T, sim->win);
+
+	}
+ 	MPI_Win_fence(0, sim->win); 	
+	MPI_Barrier(MPI_COMM_WORLD);
+#ifdef DEBUG
+	std::cout << "DEBUG::  Thread " << rank << " complete the xbgas store\n"; 
+#endif
+}
+
+
+
 // NOTE: currently used to trasnfer a "single" data element between two threadsbased on the upper 64-bit address stored in OLB
-void mmu_t::load_remote_path(int target, reg_t addr, reg_t len, uint8_t* bytes)
+void mmu_t::load_remote_path(int64_t target, reg_t addr, reg_t len, uint8_t* bytes)
 {
 	int rank	=	sim->myid;
 	MPI_Status status;
@@ -104,39 +139,42 @@ void mmu_t::load_remote_path(int target, reg_t addr, reg_t len, uint8_t* bytes)
 	// Temporarily go through the MMU address translation
   reg_t paddr = translate(addr, LOAD);
   auto host_addr = sim->addr_to_mem(paddr);
+#ifdef DEBUG
+  	std::cout << "DEBUG:: Thread " << rank << ", Host Addr = "<< (reg_t)host_addr 
+		<< ", device addr = " << (reg_t)(sim->mems[0].second->contents()) <<"\n"; 
+  	std::cout << "Thread " << rank << " sent the address offset: "<< (reg_t)host_addr - (reg_t)(sim->mems[0].second->contents()) <<"\n"; 
+#endif
 
-
+ 	MPI_Win_fence(0, sim->win); 	
 	//Target thread
-	if( rank == target){
+	if( rank == target ){
 		MPI_Request recv_req;
 		char* p = sim->x_mem.first;
 		reg_t offset;
 #ifdef DEBUG
-  	std::cout << "Thread " << rank << " execute the extended integer load function calls\n"; 
+  	std::cout << "DEBUG::  Thread " << rank << " executing the xbgas load\n"; 
 #endif
-		MPI_Recv(&offset, 1, MPI_UINT64_T, sim->world_size - target - 1, 0, MPI_COMM_WORLD, &status);
+		//MPI_Recv(&offset, 1, MPI_UINT64_T, sim->world_size - target - 1, 0, MPI_COMM_WORLD, &status);
   	//std::cout << "Target Thread " << rank << " received the address offset: "<< offset <<" \n"; 
 		//MPI_Send((uint8_t*)(sim->x_mem.first + offset), len, MPI_UINT8_T, sim->world_size - target - 1, 1, MPI_COMM_WORLD);
-		MPI_Send((uint8_t*)(host_addr), len, MPI_UINT8_T, sim->world_size - target - 1, 1, MPI_COMM_WORLD);
-	}
+		//MPI_Send((uint8_t*)(host_addr), len, MPI_UINT8_T, sim->world_size - target - 1, 1, MPI_COMM_WORLD);
 
-
-	//Requster thread
-	//NOTE: This only works when we have only 2 threads
-	else if(rank == sim->world_size - target - 1){
+	}else{ // Requestor Threads
 	  std::pair<reg_t, reg_t> message;	
     message = std::make_pair(len, (addr -  (reg_t)(sim->x_mem.first)));
 #ifdef DEBUG
-  	std::cout << "Thread " << rank << " execute the extended integer load function calls\n"; 
+  	std::cout << "DEBUG::  Thread " << rank << " executing the xbgas load\n"; 
 #endif
-		MPI_Request send_req;
-		MPI_Send(&message.second, 1, MPI_UINT64_T, target, 0, MPI_COMM_WORLD); 
-  	//std::cout << "Requestor Thread " << rank << " sent the address offset: "<< message.second <<"\n"; 
-		MPI_Recv(bytes, len, MPI_UINT8_T, target, 1, MPI_COMM_WORLD, &status );
-		
+		//MPI_Request send_req;
+		//MPI_Send(&message.second, 1, MPI_UINT64_T, target, 0, MPI_COMM_WORLD); 
+		//MPI_Recv(bytes, len, MPI_UINT8_T, target, 1, MPI_COMM_WORLD, &status );
+		MPI_Get(bytes, len, MPI_UINT8_T, target, (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()), len, MPI_UINT8_T, sim->win);
+
 	}
+ 	MPI_Win_fence(0, sim->win); 	
+	MPI_Barrier(MPI_COMM_WORLD);
 #ifdef DEBUG
-  std::cout << "thread " << rank << " complete the extended integer load function calls\n"; 
+  std::cout << "DEBUG::  Thread " << rank << " completes the xbgas load\n"; 
 #endif
 }
 
@@ -233,12 +271,12 @@ reg_t mmu_t::walk(reg_t addr, access_type type, reg_t mode)
   // Page table base address.
   // By default, xlen = 40, SPTBR_MODE_SV39, it is 0x80016000
   reg_t base = vm.ptbase;
-#ifdef DEBUG
-  std::cout << " vm.levels  = "<< vm.levels
-            << " vm.idxbits = "<< vm.idxbits
-	    << " vm.ptesize = "<< vm.ptesize
-            << std::endl;
-#endif
+//#ifdef DEBUG
+//  std::cout << " vm.levels  = "<< vm.levels
+//            << " vm.idxbits = "<< vm.idxbits
+//	    << " vm.ptesize = "<< vm.ptesize
+//            << std::endl;
+//#endif
   // process the multi-level page-tables
   for (int i = vm.levels - 1; i >= 0; i--) {
     int ptshift = i * vm.idxbits;
@@ -254,12 +292,12 @@ reg_t mmu_t::walk(reg_t addr, access_type type, reg_t mode)
     reg_t pte = vm.ptesize == 4 ? *(uint32_t*)ppte : *(uint64_t*)ppte;
     reg_t ppn = pte >> PTE_PPN_SHIFT;
 
-#ifdef DEBUG
-  std::cout << " ppte  = "<<  std::hex << &ppte
-            << " pte   = "<<  std::hex << pte
-	    << " ppn   = "<<  std::hex << ppn
-            << std::endl;
-#endif
+//#ifdef DEBUG
+//  std::cout << " ppte  = "<<  std::hex << &ppte
+//            << " pte   = "<<  std::hex << pte
+//	    << " ppn   = "<<  std::hex << ppn
+//            << std::endl;
+//#endif
     if (PTE_TABLE(pte)) { // next level of page table
       base = ppn << PGSHIFT;
     } else if ((pte & PTE_U) ? s_mode && (type == FETCH || !sum) : !s_mode) {
@@ -286,9 +324,9 @@ reg_t mmu_t::walk(reg_t addr, access_type type, reg_t mode)
       reg_t vpn = addr >> PGSHIFT;
       reg_t value = (ppn | (vpn & ((reg_t(1) << ptshift) - 1))) << PGSHIFT;
       
-#ifdef DEBUG
-      std::cout << "Final output address is " << std::hex << value << std::endl; 
-#endif       
+//#ifdef DEBUG
+//      std::cout << "Final output address is " << std::hex << value << std::endl; 
+//#endif       
       return value; // base addr of the mapped phsycial page
     }
   }

@@ -74,7 +74,7 @@ private:
 	int world_size;
 	int	myid;
 	int xbgas;
-  MPI_Win win;
+  MPI_win win;
   
   // memory-mapped I/O routines
   char* addr_to_mem(reg_t addr);

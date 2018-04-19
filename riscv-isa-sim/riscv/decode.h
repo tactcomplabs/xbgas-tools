@@ -139,6 +139,7 @@ private:
 // xbgas extensions for Integer Load/Store Instructions
 #define READ_XBREG(reg) STATE.XBR[reg]
 #define EXT1 READ_XBREG(insn.rs1())
+#define EXT2 READ_XBREG(insn.rs2())
 
 #define READ_FREG(reg) STATE.FPR[reg]
 #define RS1 READ_REG(insn.rs1())

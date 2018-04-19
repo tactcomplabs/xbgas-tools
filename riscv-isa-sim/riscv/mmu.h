@@ -123,10 +123,11 @@ public:
   // template for functions that load an aligned value from remote meemory devices
   #define xbgas_load_func(type) \
     inline type##_t xbgas_load_##type(reg_t upper, reg_t lower) { \
+	  std::cout <<"DEBUG::  The "<< "xbgas_load_" <<#type<<" are executed successfully\n";\
 		  upper = 1;\
-			if (upper == 0)\
+			if (!upper)\
 				return load_##type(lower);\
-		  int target = sim->olb_visit(upper);\
+		  int64_t target = sim->olb_visit(upper);\
 			if (unlikely(target == -1))\
 				throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
       type##_t res; \
@@ -134,7 +135,7 @@ public:
       return res; \
     }
  
-		  //std::cout << "Target thread is "<< target<<"\n";\
+		  //std::cout << "Target thread is "<< target<<"\n";
 		  //std::cout << "Into function xbgas_load()\n";
   // load value from remote memory at aligned address; zero extend to register width
 	xbgas_load_func(uint64)
@@ -168,6 +169,38 @@ public:
         store_slow_path(addr, sizeof(type##_t), (const uint8_t*)&val); \
     }
 
+  // store value to memory at aligned address
+  store_func(uint8)
+  store_func(uint16)
+  store_func(uint32)
+  store_func(uint64)
+  
+	
+	// template for functions that store an aligned value to memory
+  #define xbgas_store_func(type) \
+    void xbgas_store_##type(reg_t upper, reg_t addr, type##_t val) { \
+			upper = 1;\
+			if(!upper)\
+				return store_##type(addr, val);\
+			int64_t target = sim->olb_visit(upper);\
+			if (unlikely(target == -1))\
+				throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
+			store_remote_path(target, addr, sizeof(type##_t), (uint8_t*)&val); \
+    }
+
+
+	xbgas_store_func(uint64)
+	xbgas_store_func(uint32)
+	xbgas_store_func(uint16)
+  xbgas_store_func(uint8)
+
+	//xbgas_store_func(int64)
+	//xbgas_store_func(int32)
+	//xbgas_store_func(int16)
+	//xbgas_store_func(int8)
+
+
+
   // template for functions that perform an atomic memory operation
   #define amo_func(type) \
     template<typename op> \
@@ -187,11 +220,6 @@ public:
       } \
     }
 
-  // store value to memory at aligned address
-  store_func(uint8)
-  store_func(uint16)
-  store_func(uint32)
-  store_func(uint64)
 
   // perform an atomic memory operation at an aligned address
   amo_func(uint32)
@@ -252,7 +280,8 @@ public:
 
   void flush_tlb();
   void flush_icache();
-  void load_remote_path(int target, reg_t addr, reg_t len, uint8_t* bytes);
+  void load_remote_path(int64_t target, reg_t addr, reg_t len, uint8_t* bytes);
+  void store_remote_path(int64_t target, reg_t addr, reg_t len, uint8_t* bytes);
   void register_memtracer(memtracer_t*);
   // xbgas extensions
   bool set_xbgas();

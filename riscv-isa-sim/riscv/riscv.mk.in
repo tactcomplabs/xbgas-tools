@@ -260,6 +260,11 @@ riscv_insn_list = \
 	elh\
 	elhu\
 	elbu\
+	esd\
+	esb\
+	esw\
+	esh\
+	ese\
 
 riscv_gen_srcs = \
 	$(addsuffix .cc,$(riscv_insn_list))

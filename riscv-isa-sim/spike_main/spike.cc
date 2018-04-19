@@ -15,7 +15,7 @@
 #include <mpi.h>
 
 
-//#define DEBUG
+#define DEBUG
 static void help()
 {
   fprintf(stderr, "usage: spike [host options] <target program> [target options]\n");
@@ -113,6 +113,7 @@ int main(int argc, char** argv)
   int	 	rank	  		= 0; 
 	int 	world_size	= 0; 
   std::pair<char*, size_t> shared_mem;
+	MPI_Win win;
   MPI_Init(&argc, &argv);
 
   option_parser_t parser;
@@ -146,25 +147,36 @@ int main(int argc, char** argv)
       exit(-1);
     }
   });
-  // Init the xBGAS extensions 
 	
 
   auto argv1 = parser.parse(argv);
   std::vector<std::string> htif_args(argv1, (const char*const*)argv + argc);
   if (mems.empty())
     mems = make_mems("2048");
-
+#ifdef DEBUG
+  std::cout<< "DEBUG::  Allocated memory address is 0x" << (reg_t)mems[0].second->contents() << std::hex << std::endl;  
+#endif	
+  // Init the xBGAS extensions 
   if(xbgas){
 #ifdef DEBUG		
-    std::cout << "xbgas = " << xbgas << "\n";
-#endif
+    std::cout << "DEBUG::  xBGAS extension is enabled\n";
+#endif	
     char 	processor_name[MPI_MAX_PROCESSOR_NAME];
     int	 	name_len;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Get_processor_name(processor_name, &name_len);
+		MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+		// Attach the shared memory 
+	  // MPI_Win_attach(win, shared_mem.first, shared_mem.second);	
+
+		// Attach the original memory 
+	  //MPI_Win_attach(win, mems[0].second->contents(), mems[0].second->size());	
+		MPI_Win_create(mems[0].second->contents(), mems[0].second->size(), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+	 //std::cout << "size of the attached window is " << mems[0].second->size() << std::endl;
+
 #ifdef DEBUG
-    std::cout <<"Hello world from processor " 
+    std::cout <<"DEBUG::  Hello world from processor " 
  	    << processor_name
 	    << ", rank" 	<<  rank 
  	    << " out of " 	<<  world_size 
@@ -172,12 +184,13 @@ int main(int argc, char** argv)
 #endif
 		 
   }
+
   //if(xbgas == true && shared_mem.first == NULL)
   //shared_mem = make_shared_mem("512");
 #ifdef DEBUG
-  std::cout << "shared memory address is " <<std::hex<< (uint64_t)shared_mem.first<<"\n";
+  std::cout << "DEBUG::  Thread " << rank <<", Shared memory address is 0x" <<std::hex<< (uint64_t)shared_mem.first<<"\n";
 #endif
-  sim_t s(isa, nprocs, halted, start_pc, mems, htif_args, shared_mem, world_size, rank, xbgas);
+  sim_t s(isa, nprocs, halted, start_pc, mems, htif_args, shared_mem, world_size, rank, xbgas, win);
 	// Init OLB in each core 
   if (xbgas){
 		if(s.olb_init() == -1)
@@ -216,6 +229,10 @@ int main(int argc, char** argv)
   s.set_log(log);
   s.set_histogram(histogram);
   ret = s.run();
-  MPI_Finalize();
+	if(xbgas){
+		MPI_Win_detach(win,mems[0].second->contents());
+		MPI_Win_free(&win);
+  	MPI_Finalize();
+	}
   return ret;
 }
