@@ -21,6 +21,10 @@
 #else
 #define PGSHIFT 12
 #endif
+typedef __int128 int128_t;
+typedef unsigned __int128 uint128_t;
+
+
 const reg_t PGSIZE = 1 << PGSHIFT;
 const reg_t PGMASK = ~(PGSIZE-1);
 
@@ -118,15 +122,20 @@ public:
   load_func(int16)
   load_func(int32)
   load_func(int64)
+	// Will only be called in the xbgas local load
+  load_func(int128)
 
 
+				//if(unlikely( std::to_string(#type) == "int128"))\
+					std::runtime_error("Local 128b integer load is not supported\n");\
+				else{\
   // template for functions that load an aligned value from remote meemory devices
   #define xbgas_load_func(type) \
     inline type##_t xbgas_load_##type(reg_t upper, reg_t lower) { \
 	  std::cout <<"DEBUG::  The "<< "xbgas_load_" <<#type<<" are executed successfully\n";\
 		  upper = 1;\
 			if (!upper)\
-				return load_##type(lower);\
+					load_##type(lower);\
 		  int64_t target = sim->olb_visit(upper);\
 			if (unlikely(target == -1))\
 				throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
@@ -135,14 +144,13 @@ public:
       return res; \
     }
  
-		  //std::cout << "Target thread is "<< target<<"\n";
-		  //std::cout << "Into function xbgas_load()\n";
   // load value from remote memory at aligned address; zero extend to register width
 	xbgas_load_func(uint64)
 	xbgas_load_func(uint32)
 	xbgas_load_func(uint16)
 	xbgas_load_func(uint8)
 
+	xbgas_load_func(int128)
 	xbgas_load_func(int64)
 	xbgas_load_func(int32)
 	xbgas_load_func(int16)
@@ -174,6 +182,9 @@ public:
   store_func(uint16)
   store_func(uint32)
   store_func(uint64)
+	// Will only be called in the xbgas local store
+	store_func(uint128) 
+
   
 	
 	// template for functions that store an aligned value to memory
@@ -189,15 +200,12 @@ public:
     }
 
 
+	xbgas_store_func(uint128)
 	xbgas_store_func(uint64)
 	xbgas_store_func(uint32)
 	xbgas_store_func(uint16)
   xbgas_store_func(uint8)
 
-	//xbgas_store_func(int64)
-	//xbgas_store_func(int32)
-	//xbgas_store_func(int16)
-	//xbgas_store_func(int8)
 
 
 

@@ -254,12 +254,14 @@ riscv_insn_list = \
 	wfi \
 	xor \
 	xori \
+	elq\
 	eld\
 	elb\
 	elw\
 	elh\
 	elhu\
 	elbu\
+	esq\
 	esd\
 	esb\
 	esw\
