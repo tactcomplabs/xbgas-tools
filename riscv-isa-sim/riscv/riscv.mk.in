@@ -267,6 +267,22 @@ riscv_insn_list = \
 	esw\
 	esh\
 	ese\
+	erld\
+	erlw\
+	erlh\
+	erlhu\
+	erlb\
+	erlbu\
+	erle\
+	ersd\
+	ersw\
+	ersh\
+	ersb\
+	erse\
+	eaddi\
+	eaddie\
+	eaddix\
+
 
 riscv_gen_srcs = \
 	$(addsuffix .cc,$(riscv_insn_list))

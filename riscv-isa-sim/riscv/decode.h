@@ -140,11 +140,16 @@ private:
 #define READ_XBREG(reg) STATE.XBR[reg]
 #define EXT1 READ_XBREG(insn.rs1())
 #define EXT2 READ_XBREG(insn.rs2())
+#define EXT3 READ_XBREG(insn.rd())
+#define RD READ_REG(insn.rd())
 
 #define READ_FREG(reg) STATE.FPR[reg]
 #define RS1 READ_REG(insn.rs1())
 #define RS2 READ_REG(insn.rs2())
 #define WRITE_RD(value) WRITE_REG(insn.rd(), value)
+// xbgas extended instruction support
+# define WRITE_REG_EXD(reg, value) STATE.XBR.write(reg, value)
+#define WRITE_EXD(value) WRITE_REG_EXD(insn.rd(), value)
 
 #ifndef RISCV_ENABLE_COMMITLOG
 # define WRITE_REG(reg, value) STATE.XPR.write(reg, value)

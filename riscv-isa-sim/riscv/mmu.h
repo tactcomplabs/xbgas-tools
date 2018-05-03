@@ -126,13 +126,9 @@ public:
   load_func(int128)
 
 
-				//if(unlikely( std::to_string(#type) == "int128"))\
-					std::runtime_error("Local 128b integer load is not supported\n");\
-				else{\
   // template for functions that load an aligned value from remote meemory devices
   #define xbgas_load_func(type) \
     inline type##_t xbgas_load_##type(reg_t upper, reg_t lower) { \
-	  std::cout <<"DEBUG::  The "<< "xbgas_load_" <<#type<<" are executed successfully\n";\
 		  upper = 1;\
 			if (!upper)\
 					load_##type(lower);\
@@ -141,6 +137,7 @@ public:
 				throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
       type##_t res; \
       load_remote_path(target, lower, sizeof(type##_t), (uint8_t*)&res); \
+	    std::cout <<"DEBUG::  The "<< "xbgas_load_" <<#type<<" are executed successfully\n";\
       return res; \
     }
  
@@ -186,17 +183,20 @@ public:
 	store_func(uint128) 
 
   
-	
+		  //std::cout << "\nupper = " << upper << " addr = " << std::hex << addr <<std::endl;
+		  //std::cout << "\nvalue = " << std::dec<<(uint64_t)val << std::endl;
+			//std::cout << " value = " << val << std::endl;	
+			//upper = 1;
 	// template for functions that store an aligned value to memory
   #define xbgas_store_func(type) \
     void xbgas_store_##type(reg_t upper, reg_t addr, type##_t val) { \
-			upper = 1;\
 			if(!upper)\
 				return store_##type(addr, val);\
 			int64_t target = sim->olb_visit(upper);\
 			if (unlikely(target == -1))\
 				throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
 			store_remote_path(target, addr, sizeof(type##_t), (uint8_t*)&val); \
+	    std::cout <<"DEBUG::  The "<< "xbgas_store_" <<#type<<" are executed successfully\n";\
     }
 
 

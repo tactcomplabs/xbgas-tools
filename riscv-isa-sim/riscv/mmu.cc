@@ -4,6 +4,7 @@
 #include "sim.h"
 #include "processor.h"
 #include <mpi.h>
+#include <iostream>
 //#define DEBUG
 mmu_t::mmu_t(sim_t* sim, processor_t* proc)
  : sim(sim), proc(proc),
@@ -98,6 +99,10 @@ reg_t reg_from_bytes(size_t len, const uint8_t* bytes)
 
 void mmu_t::store_remote_path(int64_t target, reg_t addr, reg_t len,uint8_t* bytes )
 {
+	
+#ifdef DEBUG
+	std::cout << "DEBUG::  Target ID = " << target << " Local Addr = " << addr << " value = " << std::dec<<(uint64_t)(*bytes) << std::endl;
+#endif
 	int rank	=	sim->myid;
 	// Temporarily go through the MMU address translation
   reg_t paddr = translate(addr, STORE);

@@ -45,6 +45,24 @@ struct : public arg_t {
 
 struct : public arg_t {
   std::string to_string(insn_t insn) const {
+    return xbr_name[insn.rd()];
+  }
+} erd;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return xbr_name[insn.rs1()];
+  }
+} ers1;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return xbr_name[insn.rs2()];
+  }
+} ers2;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
     return fpr_name[insn.rd()];
   }
 } frd;
