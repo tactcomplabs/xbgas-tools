@@ -129,7 +129,6 @@ public:
   // template for functions that load an aligned value from remote meemory devices
   #define xbgas_load_func(type) \
     inline type##_t xbgas_load_##type(reg_t upper, reg_t lower) { \
-		  upper = 1;\
 			if (!upper)\
 					load_##type(lower);\
 		  int64_t target = sim->olb_visit(upper);\
