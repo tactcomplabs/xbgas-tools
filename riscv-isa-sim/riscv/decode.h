@@ -148,7 +148,7 @@ private:
 #define RS2 READ_REG(insn.rs2())
 #define WRITE_RD(value) WRITE_REG(insn.rd(), value)
 // xbgas extended instruction support
-# define WRITE_REG_EXD(reg, value) STATE.XBR.write(reg, value)
+#define WRITE_REG_EXD(reg, value) STATE.XBR.write(reg, value)
 #define WRITE_EXD(value) WRITE_REG_EXD(insn.rd(), value)
 
 #ifndef RISCV_ENABLE_COMMITLOG

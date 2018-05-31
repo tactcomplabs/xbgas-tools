@@ -23,7 +23,7 @@ public:
   sim_t(const char* isa, size_t _nprocs,  bool halted, reg_t start_pc,
         std::vector<std::pair<reg_t, mem_t*>> mems,
         const std::vector<std::string>& args, std::pair<char*, size_t> x_mem,
-				int world_size, int myid, int xbgas, MPI_Win win);
+	int world_size, int myid, int xbgas, MPI_Win win);
   ~sim_t();
 
   // run the simulation to completion
@@ -41,9 +41,9 @@ public:
 
   debug_module_t debug_module;
 
-	// xbgas extension
-	int olb_init();
-	int olb_visit(reg_t addr);
+  // xbgas extension
+  int olb_init();
+  int olb_visit(reg_t addr);
 
 private:
   std::vector<std::pair<reg_t, mem_t*>> mems;
@@ -54,7 +54,7 @@ private:
   std::unique_ptr<rom_device_t> boot_rom;
   std::unique_ptr<clint_t> clint;
   bus_t bus;
-  
+
 
   processor_t* get_core(const std::string& i);
   void step(size_t n); // step through simulation
@@ -71,11 +71,11 @@ private:
   //xBGAS_extensions
   std::pair<char*, size_t> x_mem;
   std::vector<std::pair<uint64_t, int>> olb;
-	int world_size;
-	int	myid;
-	int xbgas;
+  int world_size;
+  int myid;
+  int xbgas;
   MPI_Win win;
-  
+
   // memory-mapped I/O routines
   char* addr_to_mem(reg_t addr);
   bool mmio_load(reg_t addr, size_t len, uint8_t* bytes);

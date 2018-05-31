@@ -147,7 +147,6 @@ int main(int argc, char** argv)
       exit(-1);
     }
   });
-	
 
   auto argv1 = parser.parse(argv);
   std::vector<std::string> htif_args(argv1, (const char*const*)argv + argc);
@@ -155,48 +154,48 @@ int main(int argc, char** argv)
     mems = make_mems("2048");
 #ifdef DEBUG
   std::cout<< "DEBUG::  Allocated memory address is 0x" << (reg_t)mems[0].second->contents() << std::hex << std::endl;  
-#endif	
-  // Init the xBGAS extensions 
+#endif
+  // Init the xBGAS extensions
   if(xbgas){
-#ifdef DEBUG		
+#ifdef DEBUG
     std::cout << "DEBUG::  xBGAS extension is enabled\n";
-#endif	
+#endif
     char 	processor_name[MPI_MAX_PROCESSOR_NAME];
     int	 	name_len;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Get_processor_name(processor_name, &name_len);
-		MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-		// Attach the shared memory 
-	  // MPI_Win_attach(win, shared_mem.first, shared_mem.second);	
-
-		// Attach the original memory 
-	  //MPI_Win_attach(win, mems[0].second->contents(), mems[0].second->size());	
-		MPI_Win_create(mems[0].second->contents(), mems[0].second->size(), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-	 //std::cout << "size of the attached window is " << mems[0].second->size() << std::endl;
+    MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+    // Attach the shared memory
+    // MPI_Win_attach(win, shared_mem.first, shared_mem.second);
+    // Attach the original memory
+    //MPI_Win_attach(win, mems[0].second->contents(), mems[0].second->size());
+    MPI_Win_create(mems[0].second->contents(), mems[0].second->size(), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+    //std::cout << "size of the attached window is " << mems[0].second->size() << std::endl;
 
 #ifdef DEBUG
-    std::cout <<"DEBUG::  Hello world from processor " 
- 	    << processor_name
-	    << ", rank" 	<<  rank 
- 	    << " out of " 	<<  world_size 
-	    << " processors"    <<  std::endl;
+    std::cout << "DEBUG::  Hello world from processor "
+ 	      << processor_name
+	      << ", rank" 	<<  rank
+ 	      << " out of " 	<<  world_size
+	      << " processors"    <<  std::endl;
 #endif
-		 
   }
 
   //if(xbgas == true && shared_mem.first == NULL)
   //shared_mem = make_shared_mem("512");
 #ifdef DEBUG
-  std::cout << "DEBUG::  Thread " << rank <<", Shared memory address is 0x" <<std::hex<< (uint64_t)shared_mem.first<<"\n";
+  std::cout << "DEBUG::  Thread " << rank <<", Shared memory address is 0x"
+            << std::hex << (uint64_t)shared_mem.first << std::endl;
 #endif
-  sim_t s(isa, nprocs, halted, start_pc, mems, htif_args, shared_mem, world_size, rank, xbgas, win);
-	// Init OLB in each core 
-  if (xbgas){
-		if(s.olb_init() == -1)
-			throw std::runtime_error("olb init failed\n");
-	}
+  sim_t s(isa, nprocs, halted, start_pc, mems, htif_args,
+          shared_mem, world_size, rank, xbgas, win);
 
+  // Init OLB in each core
+  if (xbgas){
+    if(s.olb_init() == -1)
+      throw std::runtime_error("olb init failed\n");
+  }
 
   std::unique_ptr<remote_bitbang_t> remote_bitbang((remote_bitbang_t *) NULL);
   std::unique_ptr<jtag_dtm_t> jtag_dtm(new jtag_dtm_t(&s.debug_module));

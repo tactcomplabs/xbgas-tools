@@ -92,8 +92,8 @@ struct state_t
   reg_t pc;
   regfile_t<reg_t, NXPR, true> XPR;
   regfile_t<freg_t, NFPR, false> FPR;
-	// register group for xbgas extensions
-	regfile_t<reg_t, NXBR, false> XBR;
+  // register group for xbgas extensions
+  regfile_t<reg_t, NXBR, false> XBR;
 
   // control and status registers
   reg_t prv;    // TODO: Can this be an enum instead?
@@ -162,7 +162,10 @@ static int cto(reg_t val)
 class processor_t : public abstract_device_t
 {
 public:
-  processor_t(const char* isa, sim_t* sim, uint32_t id, bool halt_on_reset=false);
+  processor_t(const char* isa, sim_t* sim, uint32_t id,
+              bool halt_on_reset=false,
+              int world_size=0, int myid=0,                   //xbgas
+              uint64_t start_addr=0x00ull, size_t memsize=0); //xbgas
   ~processor_t();
 
   void set_debug(bool value);
