@@ -109,12 +109,11 @@ int main(int argc, char** argv)
   bool use_rbb = false;
   int ret;
   // xbgas extensions
-  int 	xbgas 			= 0;
-  int	 	rank	  		= 0; 
-	int 	world_size	= 0; 
+  int 	xbgas       = 0;
+  int	rank        = 0;
+  int 	world_size  = 0;
   std::pair<char*, size_t> shared_mem;
-	MPI_Win win;
-  MPI_Init(&argc, &argv);
+  MPI_Win win;
 
   option_parser_t parser;
   parser.help(&help);
@@ -128,7 +127,7 @@ int main(int argc, char** argv)
   parser.option('H', 0, 0, [&](const char* s){halted = true;});
   // xBGAS Extensions
   parser.option('x', 0, 1, [&](const char* s){
-		xbgas = 1; 
+		xbgas = 1;
 		shared_mem = make_shared_mem(s);
 		});
   parser.option(0, "rbb-port", 1, [&](const char* s){use_rbb = true; rbb_port = atoi(s);});
@@ -160,6 +159,7 @@ int main(int argc, char** argv)
 #ifdef DEBUG
     std::cout << "DEBUG::  xBGAS extension is enabled\n";
 #endif
+    MPI_Init(&argc, &argv);
     char 	processor_name[MPI_MAX_PROCESSOR_NAME];
     int	 	name_len;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
@@ -180,7 +180,7 @@ int main(int argc, char** argv)
  	      << " out of " 	<<  world_size
 	      << " processors"    <<  std::endl;
 #endif
-  }
+  }/* end if(xbgas) */
 
   //if(xbgas == true && shared_mem.first == NULL)
   //shared_mem = make_shared_mem("512");
@@ -228,10 +228,12 @@ int main(int argc, char** argv)
   s.set_log(log);
   s.set_histogram(histogram);
   ret = s.run();
-	if(xbgas){
-		MPI_Win_detach(win,mems[0].second->contents());
-		MPI_Win_free(&win);
-  	MPI_Finalize();
-	}
+
+  if(xbgas){
+    MPI_Win_detach(win,mems[0].second->contents());
+    MPI_Win_free(&win);
+    MPI_Finalize();
+  }
+
   return ret;
 }
