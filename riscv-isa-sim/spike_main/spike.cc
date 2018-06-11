@@ -52,13 +52,15 @@ static std::pair<char*, size_t> make_shared_mem(const char* arg)
     reg_t size = (reg_t(mb) << 20);
     p = (char*)calloc(1, size);
 #ifdef DEBUG
-		//std::cout << "x_mem addr = " << std::hex<<(uint64_t)p << "\n";
+    //std::cout << "x_mem addr = " << std::hex<<(uint64_t)p << "\n";
 #endif
-    if(!p) 
-		throw std::runtime_error("couldn't allocate " + std::to_string(size) + " bytes of xBGAS shared memory");
+    if(!p)
+      throw std::runtime_error("couldn't allocate " + std::to_string(size)
+                               + " bytes of xBGAS shared memory");
     return std::make_pair(p, size);
   }
-  	return std::make_pair((char*)NULL, 0);
+
+  return std::make_pair((char*)NULL, 0);
 }
 
 static std::vector<std::pair<reg_t, mem_t*>> make_mems(const char* arg)
