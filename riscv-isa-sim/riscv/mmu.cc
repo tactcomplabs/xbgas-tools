@@ -132,9 +132,11 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
     std::cout << "Thread " << rank << " executing the xbgas store\n";
 #endif
 
+    MPI_Win_lock(MPI_LOCK_SHARED, target, 0, sim->win);
     MPI_Put(bytes, len, MPI_UINT8_T, target,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
             len, MPI_UINT8_T, sim->win);
+    MPI_Win_unlock(target, sim->win);
     //MPI_Request put_req;
     //MPI_Win_lock_all(0, sim->win);
     //MPI_Rput(bytes, len, MPI_UINT8_T, target,
@@ -194,9 +196,11 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
     //MPI_Send(&message.second, 1, MPI_UINT64_T, target, 0, MPI_COMM_WORLD);
     //MPI_Recv(bytes, len, MPI_UINT8_T, target, 1, MPI_COMM_WORLD, &status );
 
+    MPI_Win_lock(MPI_LOCK_SHARED, target, 0, sim->win);
     MPI_Get(bytes, len, MPI_UINT8_T, target,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
             len, MPI_UINT8_T, sim->win);
+    MPI_Win_unlock(target, sim->win);
     //MPI_Request get_req;
     //MPI_Win_lock_all(0, sim->win);
     //MPI_Rget(bytes, len, MPI_UINT8_T, target,

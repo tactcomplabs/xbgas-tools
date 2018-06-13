@@ -174,7 +174,7 @@ int main(int argc, char** argv)
     //MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &win);
     //MPI_Win_attach(win, mems[0].second->contents(), mems[0].second->size());
     MPI_Win_create(mems[0].second->contents(), mems[0].second->size(), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-    MPI_Win_fence(0,win);
+    //MPI_Win_fence(0,win);
 
 #ifdef DEBUG
     std::cout << "DEBUG::  Hello world from processor "
@@ -235,7 +235,7 @@ int main(int argc, char** argv)
   if(xbgas){
     //MPI_Win_detach(win,mems[0].second->contents());
     MPI_Barrier(MPI_COMM_WORLD);
-    MPI_Win_fence(0,win);
+    //MPI_Win_fence(0,win);
     MPI_Win_free(&win);
     MPI_Finalize();
   }
