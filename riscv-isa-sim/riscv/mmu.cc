@@ -5,7 +5,7 @@
 #include "processor.h"
 #include <mpi.h>
 #include <iostream>
-//#define DEBUG
+#define DEBUG
 mmu_t::mmu_t(sim_t* sim, processor_t* proc)
  : sim(sim), proc(proc),
   check_triggers_fetch(false),
@@ -120,7 +120,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
             <<"\n";
 #endif
 
-  MPI_Win_fence(0, sim->win);
+  //MPI_Win_fence(0, sim->win);
   //Target thread
   if( rank == target ){
 
@@ -131,14 +131,20 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 #ifdef DEBUG
     std::cout << "Thread " << rank << " executing the xbgas store\n";
 #endif
+
     MPI_Put(bytes, len, MPI_UINT8_T, target,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
             len, MPI_UINT8_T, sim->win);
-
+    //MPI_Request put_req;
+    //MPI_Win_lock_all(0, sim->win);
+    //MPI_Rput(bytes, len, MPI_UINT8_T, target,
+    //        (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
+    //        len, MPI_UINT8_T, sim->win, &put_req);
+    //MPI_Win_unlock_all(sim->win);
   }
 
-  MPI_Win_fence(0, sim->win);
-  MPI_Barrier(MPI_COMM_WORLD);
+  //MPI_Win_fence(0, sim->win);
+  //MPI_Barrier(MPI_COMM_WORLD);
 #ifdef DEBUG
   std::cout << "DEBUG::  Thread " << rank << " complete the xbgas store\n";
 #endif
@@ -164,7 +170,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
             <<"\n";
 #endif
 
-  MPI_Win_fence(0, sim->win);
+  //MPI_Win_fence(0, sim->win);
   //Target thread
   if( rank == target ){
     MPI_Request recv_req;
@@ -187,14 +193,22 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
     //MPI_Request send_req;
     //MPI_Send(&message.second, 1, MPI_UINT64_T, target, 0, MPI_COMM_WORLD);
     //MPI_Recv(bytes, len, MPI_UINT8_T, target, 1, MPI_COMM_WORLD, &status );
+
     MPI_Get(bytes, len, MPI_UINT8_T, target,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
             len, MPI_UINT8_T, sim->win);
+    //MPI_Request get_req;
+    //MPI_Win_lock_all(0, sim->win);
+    //MPI_Rget(bytes, len, MPI_UINT8_T, target,
+    //        (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
+    //        len, MPI_UINT8_T, sim->win, &get_req);
+    //MPI_Wait(&get_req,MPI_STATUS_IGNORE);
+    //MPI_Win_unlock_all(sim->win);
 
   }
 
-  MPI_Win_fence(0, sim->win);
-  MPI_Barrier(MPI_COMM_WORLD);
+  //MPI_Win_fence(0, sim->win);
+  //MPI_Barrier(MPI_COMM_WORLD);
 #ifdef DEBUG
   std::cout << "DEBUG::  Thread " << rank << " completes the xbgas load\n";
 #endif

@@ -161,19 +161,20 @@ int main(int argc, char** argv)
 #ifdef DEBUG
     std::cout << "DEBUG::  xBGAS extension is enabled\n";
 #endif
-    MPI_Init(&argc, &argv);
     char 	processor_name[MPI_MAX_PROCESSOR_NAME];
     int	 	name_len;
+
+    // Init the MPI handlers
+    MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Get_processor_name(processor_name, &name_len);
-    MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-    // Attach the shared memory
-    // MPI_Win_attach(win, shared_mem.first, shared_mem.second);
-    // Attach the original memory
+
+    // Init the MPI Window
+    //MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &win);
     //MPI_Win_attach(win, mems[0].second->contents(), mems[0].second->size());
     MPI_Win_create(mems[0].second->contents(), mems[0].second->size(), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-    //std::cout << "size of the attached window is " << mems[0].second->size() << std::endl;
+    MPI_Win_fence(0,win);
 
 #ifdef DEBUG
     std::cout << "DEBUG::  Hello world from processor "
@@ -232,7 +233,9 @@ int main(int argc, char** argv)
   ret = s.run();
 
   if(xbgas){
-    MPI_Win_detach(win,mems[0].second->contents());
+    //MPI_Win_detach(win,mems[0].second->contents());
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Win_fence(0,win);
     MPI_Win_free(&win);
     MPI_Finalize();
   }

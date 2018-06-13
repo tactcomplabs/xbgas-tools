@@ -129,12 +129,15 @@ public:
   // template for functions that load an aligned value from remote meemory devices
   #define xbgas_load_func(type) \
     inline type##_t xbgas_load_##type(reg_t upper, reg_t lower) { \
-      if (!upper)\
+      if (!upper){\
         load_##type(lower);\
+      }\
       int64_t target = sim->olb_visit(upper);\
-      if (unlikely(target == -1))\
+      if (unlikely(target == -1)){\
         throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
+      }\
       type##_t res; \
+      std::cout <<"DEBUG::  The "<< "xbgas_load_" <<#type<<" initiating load_remote_path\n";\
       load_remote_path(target, lower, sizeof(type##_t), (uint8_t*)&res); \
       std::cout <<"DEBUG::  The "<< "xbgas_load_" <<#type<<" is executed successfully\n";\
       return res; \
@@ -189,11 +192,14 @@ public:
   // template for functions that store an aligned value to memory
   #define xbgas_store_func(type) \
     void xbgas_store_##type(reg_t upper, reg_t addr, type##_t val) { \
-      if(!upper)\
+      if(!upper){\
         return store_##type(addr, val);\
+      }\
       int64_t target = sim->olb_visit(upper);\
-      if (unlikely(target == -1))\
+      if (unlikely(target == -1)){\
         throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
+      }\
+      std::cout <<"DEBUG::  The "<< "xbgas_store_" <<#type<<" initiating store_remote_path\n";\
       store_remote_path(target, addr, sizeof(type##_t), (uint8_t*)&val); \
       std::cout <<"DEBUG::  The "<< "xbgas_store_" <<#type<<" are executed successfully\n";\
     }
