@@ -125,18 +125,25 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
   if( rank == target ){
 
 #ifdef DEBUG
-    std::cout << "DEBUG::  Thread " << rank << " executing the xbgas store\n";
+//    std::cout << "DEBUG::  Thread " << rank << " executing the xbgas store\n";
 #endif
   }else{ //Requster thread
 #ifdef DEBUG
-    std::cout << "Thread " << rank << " executing the xbgas store\n";
+    std::cout << "DEBUG:: Thread " << rank << " executing the xbgas store\n";
 #endif
 
-    MPI_Win_lock(MPI_LOCK_SHARED, target, 0, sim->win);
+    //MPI_Win_lock(MPI_LOCK_SHARED, target, 0, sim->win);
+    std::cout << "DEBUG:: Thread " << rank << " acquiring the lock\n";
+    MPI_Win_lock_all(0, sim->win);
+    std::cout << "DEBUG:: Thread " << rank << " acquired the lock, sending Put\n";
     MPI_Put(bytes, len, MPI_UINT8_T, target,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
             len, MPI_UINT8_T, sim->win);
-    MPI_Win_unlock(target, sim->win);
+    std::cout << "DEBUG:: Thread " << rank << " Put complete; unlocking\n";
+    //MPI_Win_unlock(target, sim->win);
+    MPI_Win_unlock_all(sim->win);
+    std::cout << "DEBUG:: Thread " << rank << " unlock complete\n";
+
     //MPI_Request put_req;
     //MPI_Win_lock_all(0, sim->win);
     //MPI_Rput(bytes, len, MPI_UINT8_T, target,
@@ -148,7 +155,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
   //MPI_Win_fence(0, sim->win);
   //MPI_Barrier(MPI_COMM_WORLD);
 #ifdef DEBUG
-  std::cout << "DEBUG::  Thread " << rank << " complete the xbgas store\n";
+  std::cout << "DEBUG::  Thread " << rank << " completed the xbgas store\n";
 #endif
 }
 
@@ -179,7 +186,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
     char* p = sim->x_mem.first;
     reg_t offset;
 #ifdef DEBUG
-    std::cout << "DEBUG::  Thread " << rank << " executing the xbgas load\n"; 
+//    std::cout << "DEBUG::  Thread " << rank << " executing the xbgas load\n"; 
 #endif
     //MPI_Recv(&offset, 1, MPI_UINT64_T, sim->world_size - target - 1, 0, MPI_COMM_WORLD, &status);
     //std::cout << "Target Thread " << rank << " received the address offset: "<< offset <<" \n"; 
@@ -196,11 +203,17 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
     //MPI_Send(&message.second, 1, MPI_UINT64_T, target, 0, MPI_COMM_WORLD);
     //MPI_Recv(bytes, len, MPI_UINT8_T, target, 1, MPI_COMM_WORLD, &status );
 
-    MPI_Win_lock(MPI_LOCK_SHARED, target, 0, sim->win);
+    //MPI_Win_lock(MPI_LOCK_SHARED, target, 0, sim->win);
+    MPI_Win_lock_all(0, sim->win);
+    std::cout << "DEBUG:: Thread " << rank << " acquired the lock; executing Get\n";
     MPI_Get(bytes, len, MPI_UINT8_T, target,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
             len, MPI_UINT8_T, sim->win);
-    MPI_Win_unlock(target, sim->win);
+    std::cout << "DEBUG:: Thread " << rank << " completed the Get; releasing the lock\n";
+    //MPI_Win_unlock(target, sim->win);
+    MPI_Win_unlock_all(sim->win);
+    std::cout << "DEBUG:: Thread " << rank << " released the lock\n";
+
     //MPI_Request get_req;
     //MPI_Win_lock_all(0, sim->win);
     //MPI_Rget(bytes, len, MPI_UINT8_T, target,

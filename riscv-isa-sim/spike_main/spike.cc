@@ -70,7 +70,7 @@ static std::vector<std::pair<reg_t, mem_t*>> make_mems(const char* arg)
   auto mb = strtoull(arg, &p, 0);
   if (*p == 0) {
     reg_t size = reg_t(mb) << 20;
-    return std::vector<std::pair<reg_t, mem_t*>>(1, std::make_pair(reg_t(DRAM_BASE), new mem_t(size)));
+    return std::vector<std::pair<reg_t, mem_t*>>(1,std::make_pair(reg_t(DRAM_BASE), new mem_t(size)));
   }
 
   // handle base/size tuples
