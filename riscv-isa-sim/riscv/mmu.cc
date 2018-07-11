@@ -136,9 +136,15 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
     std::cout << "DEBUG:: Thread " << rank << " acquiring the lock\n";
     MPI_Win_lock_all(0, sim->win);
     std::cout << "DEBUG:: Thread " << rank << " acquired the lock, sending Put\n";
+#if 0
     MPI_Put(bytes, len, MPI_UINT8_T, target,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
             len, MPI_UINT8_T, sim->win);
+#endif
+    MPI_Accumulate(bytes, len, MPI_UINT8_T, target,
+            (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
+            len, MPI_UINT8_T, MPI_REPLACE, sim->win);
+    MPI_Win_flush(rank,sim->win);
     std::cout << "DEBUG:: Thread " << rank << " Put complete; unlocking\n";
     //MPI_Win_unlock(target, sim->win);
     MPI_Win_unlock_all(sim->win);
@@ -206,11 +212,24 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
     //MPI_Win_lock(MPI_LOCK_SHARED, target, 0, sim->win);
     MPI_Win_lock_all(0, sim->win);
     std::cout << "DEBUG:: Thread " << rank << " acquired the lock; executing Get\n";
+//#if 0
     MPI_Get(bytes, len, MPI_UINT8_T, target,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
             len, MPI_UINT8_T, sim->win);
+//#endif
+#if 0
+    uint8_t *result = NULL;
+    result = new uint8_t[len];
+    MPI_Get_accumulate(bytes, len, MPI_UINT8_T,
+            result, len, MPI_UINT8_T,
+            target,
+            (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
+            len, MPI_UINT8_T, MPI_NO_OP, sim->win);
     std::cout << "DEBUG:: Thread " << rank << " completed the Get; releasing the lock\n";
+    delete result;
+#endif
     //MPI_Win_unlock(target, sim->win);
+    MPI_Win_flush(rank,sim->win);
     MPI_Win_unlock_all(sim->win);
     std::cout << "DEBUG:: Thread " << rank << " released the lock\n";
 
