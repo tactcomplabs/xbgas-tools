@@ -39,28 +39,8 @@ static void help()
   fprintf(stderr, "  --rbb-port=<port>     Listen on <port> for remote bitbang connection\n");
   fprintf(stderr, "  --dump-dts  Print device tree string and exit\n");
   fprintf(stderr, "  ----------- xBGAS Options -----------\n" );
-  fprintf(stderr, "  -x<n>                  Enable xBGAS Extionsion and provide n MB shared memory\n" );
+  fprintf(stderr, "  -x1                  Enable xBGAS extension\n" );
   exit(1);
-}
-
-static std::pair<char*, size_t> make_shared_mem(const char* arg)
-{
-  // handle legacy xbgas argument
-  char* p;
-  auto mb = strtoull(arg, &p, 0);
-  if (*p == 0) {
-    reg_t size = (reg_t(mb) << 20);
-    p = (char*)calloc(1, size);
-#ifdef DEBUG
-    //std::cout << "x_mem addr = " << std::hex<<(uint64_t)p << "\n";
-#endif
-    if(!p)
-      throw std::runtime_error("couldn't allocate " + std::to_string(size)
-                               + " bytes of xBGAS shared memory");
-    return std::make_pair(p, size);
-  }
-
-  return std::make_pair((char*)NULL, 0);
 }
 
 static std::vector<std::pair<reg_t, mem_t*>> make_mems(const char* arg)
@@ -114,7 +94,7 @@ int main(int argc, char** argv)
   int 	xbgas       = 0;
   int	rank        = 0;
   int 	world_size  = 0;
-  std::pair<char*, size_t> shared_mem;
+  const char *memspec = "2048";
   MPI_Win win;
 
   option_parser_t parser;
@@ -124,13 +104,12 @@ int main(int argc, char** argv)
   parser.option('g', 0, 0, [&](const char* s){histogram = true;});
   parser.option('l', 0, 0, [&](const char* s){log = true;});
   parser.option('p', 0, 1, [&](const char* s){nprocs = atoi(s);});
-  parser.option('m', 0, 1, [&](const char* s){mems = make_mems(s);});
+  parser.option('m', 0, 1, [&](const char* s){memspec = s;});
   // I wanted to use --halted, but for some reason that doesn't work.
   parser.option('H', 0, 0, [&](const char* s){halted = true;});
   // xBGAS Extensions
   parser.option('x', 0, 1, [&](const char* s){
-		xbgas = 1;
-		shared_mem = make_shared_mem(s);
+		xbgas = atoi(s);
 		});
   parser.option(0, "rbb-port", 1, [&](const char* s){use_rbb = true; rbb_port = atoi(s);});
   parser.option(0, "pc", 1, [&](const char* s){start_pc = strtoull(s, 0, 0);});
@@ -151,8 +130,7 @@ int main(int argc, char** argv)
 
   auto argv1 = parser.parse(argv);
   std::vector<std::string> htif_args(argv1, (const char*const*)argv + argc);
-  if (mems.empty())
-    mems = make_mems("2048");
+  mems = make_mems(memspec);
 #ifdef DEBUG
   std::cout<< "DEBUG::  Allocated memory address is 0x" << (reg_t)mems[0].second->contents() << std::hex << std::endl;  
 #endif
@@ -187,12 +165,8 @@ int main(int argc, char** argv)
 
   //if(xbgas == true && shared_mem.first == NULL)
   //shared_mem = make_shared_mem("512");
-#ifdef DEBUG
-  std::cout << "DEBUG::  Thread " << rank <<", Shared memory address is 0x"
-            << std::hex << (uint64_t)shared_mem.first << std::endl;
-#endif
   sim_t s(isa, nprocs, halted, start_pc, mems, htif_args,
-          shared_mem, world_size, rank, xbgas, win);
+          world_size, rank, xbgas, win);
 
   // Init OLB in each core
   if (xbgas){

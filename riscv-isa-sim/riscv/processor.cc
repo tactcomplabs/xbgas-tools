@@ -20,8 +20,7 @@
 #define STATE state
 
 processor_t::processor_t(const char* isa, sim_t* sim, uint32_t id,
-        bool halt_on_reset, int world_size, int myid, uint64_t start_addr,
-        size_t memsize)
+        bool halt_on_reset, int world_size, int myid)
   : debug(false), halt_request(false), sim(sim), ext(NULL), id(id),
   halt_on_reset(halt_on_reset)
 {
@@ -36,8 +35,8 @@ processor_t::processor_t(const char* isa, sim_t* sim, uint32_t id,
   // init xbgas registers
   WRITE_REG_EXD(10,(reg_t)(myid));
   WRITE_REG_EXD(11,(reg_t)(world_size));
-  WRITE_REG_EXD(12,(reg_t)(memsize));
-  WRITE_REG_EXD(13,(reg_t)(start_addr));
+  WRITE_REG_EXD(12,(reg_t)(0U /* was xBGAS shared memsize */));
+  WRITE_REG_EXD(13,(reg_t)(0U /* was xBGAS region start address */));
 }
 
 processor_t::~processor_t()

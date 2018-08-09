@@ -189,7 +189,6 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
   //Target thread
   if( rank == target ){
     MPI_Request recv_req;
-    char* p = sim->x_mem.first;
     reg_t offset;
 #ifdef DEBUG
 //    std::cout << "DEBUG::  Thread " << rank << " executing the xbgas load\n"; 
@@ -201,7 +200,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 
   }else{ // Requestor Threads
     std::pair<reg_t, reg_t> message;
-    message = std::make_pair(len, (addr -  (reg_t)(sim->x_mem.first)));
+    message = std::make_pair(len, addr);
 #ifdef DEBUG
     std::cout << "DEBUG::  Thread " << rank << " executing the xbgas load\n";
 #endif

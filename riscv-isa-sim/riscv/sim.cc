@@ -26,13 +26,13 @@ static void handle_signal(int sig)
 sim_t::sim_t(const char* isa, size_t nprocs, bool halted, reg_t start_pc,
              std::vector<std::pair<reg_t, mem_t*>> mems,
              const std::vector<std::string>& args,
-             std::pair<char*, size_t> shmem, int world_size, int rank,
+             int world_size, int rank,
              int xbgas, MPI_Win win)
   : htif_t(args), debug_module(this), mems(mems),
     procs(std::max(nprocs, size_t(1))),
     start_pc(start_pc),
     current_step(0), current_proc(0), debug(false), remote_bitbang(NULL),
-    x_mem(shmem), world_size(world_size), myid(rank), xbgas(xbgas), win(win)
+    world_size(world_size), myid(rank), xbgas(xbgas), win(win)
 {
   signal(SIGINT, &handle_signal);
 
@@ -46,9 +46,7 @@ sim_t::sim_t(const char* isa, size_t nprocs, bool halted, reg_t start_pc,
 
   for (size_t i = 0; i < procs.size(); i++) {
     procs[i] = new processor_t(isa, this, i, halted,
-                               world_size, myid,
-                               (uint64_t)(x_mem.first),
-                               x_mem.second);
+                               world_size, myid);
   }
 
   clint.reset(new clint_t(procs));
