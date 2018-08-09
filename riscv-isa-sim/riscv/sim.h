@@ -22,7 +22,7 @@ class sim_t : public htif_t
 public:
   sim_t(const char* isa, size_t _nprocs,  bool halted, reg_t start_pc,
         std::vector<std::pair<reg_t, mem_t*>> mems,
-        const std::vector<std::string>& args, std::pair<char*, size_t> x_mem,
+        const std::vector<std::string>& args,
 	int world_size, int myid, int xbgas, MPI_Win win);
   ~sim_t();
 
@@ -69,7 +69,6 @@ private:
   remote_bitbang_t* remote_bitbang;
 
   //xBGAS_extensions
-  std::pair<char*, size_t> x_mem;
   std::vector<std::pair<uint64_t, int>> olb;
   int world_size;
   int myid;
