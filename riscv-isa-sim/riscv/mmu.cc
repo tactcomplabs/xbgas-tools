@@ -98,71 +98,14 @@ reg_t reg_from_bytes(size_t len, const uint8_t* bytes)
 
 
 void mmu_t::store_remote_path(int64_t target, reg_t addr,
-                              reg_t len,uint8_t* bytes )
+                              reg_t len, uint8_t *bytes)
 {
-
-#ifdef DEBUG
-  std::cout << "DEBUG::  Target ID = "
-            << target << " Local Addr = " << addr << " value = "
-            << std::dec<<(uint64_t)(*bytes) << std::endl;
-#endif
-  int rank	=	sim->myid;
-  // Temporarily go through the MMU address translation
-  reg_t paddr = translate(addr, STORE);
-  auto host_addr = sim->addr_to_mem(paddr);
-#ifdef DEBUG
-  std::cout << "DEBUG:: Thread " << rank << ", Host Addr = 0x"
-            << (reg_t)host_addr
-            << ", device addr = "
-            << (reg_t)(sim->mems[0].second->contents()) <<"\n";
-  std::cout << "Thread " << rank << ", address offset = 0x"
-            << (reg_t)host_addr - (reg_t)(sim->mems[0].second->contents())
-            <<"\n";
-#endif
-
-  //MPI_Win_fence(0, sim->win);
-  //Target thread
-  if( rank == target ){
-
-#ifdef DEBUG
-//    std::cout << "DEBUG::  Thread " << rank << " executing the xbgas store\n";
-#endif
-  }else{ //Requster thread
-#ifdef DEBUG
-    std::cout << "DEBUG:: Thread " << rank << " executing the xbgas store\n";
-#endif
-
-    //MPI_Win_lock(MPI_LOCK_SHARED, target, 0, sim->win);
-    std::cout << "DEBUG:: Thread " << rank << " acquiring the lock\n";
-    MPI_Win_lock_all(0, sim->win);
-    std::cout << "DEBUG:: Thread " << rank << " acquired the lock, sending Put\n";
-#if 0
-    MPI_Put(bytes, len, MPI_UINT8_T, target,
-            (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
-            len, MPI_UINT8_T, sim->win);
-#endif
-    MPI_Accumulate(bytes, len, MPI_UINT8_T, target,
-            (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
-            len, MPI_UINT8_T, MPI_REPLACE, sim->win);
-    MPI_Win_flush(rank,sim->win);
-    std::cout << "DEBUG:: Thread " << rank << " Put complete; unlocking\n";
-    //MPI_Win_unlock(target, sim->win);
-    MPI_Win_unlock_all(sim->win);
-    std::cout << "DEBUG:: Thread " << rank << " unlock complete\n";
-
-    //MPI_Request put_req;
-    //MPI_Win_lock_all(0, sim->win);
-    //MPI_Rput(bytes, len, MPI_UINT8_T, target,
-    //        (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
-    //        len, MPI_UINT8_T, sim->win, &put_req);
-    //MPI_Win_unlock_all(sim->win);
-  }
-
-  //MPI_Win_fence(0, sim->win);
-  //MPI_Barrier(MPI_COMM_WORLD);
-#ifdef DEBUG
-  std::cout << "DEBUG::  Thread " << rank << " completed the xbgas store\n";
-#endif
+  printf("mmu_t::store_remote_path (%d -> %d): punting on store of %d bytes to 0x%08x\n", sim->myid, target, len, addr);
+  
+  /* rank (sim->myid) == target */
+  /* reg_t paddr = translate(addr, STORE);
+   * auto host_addr = sim->addr_to_mem(paddr);
+   */
 }
 
 // NOTE: currently used to trasnfer a "single" data element between two threads
@@ -170,83 +113,13 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 void mmu_t::load_remote_path(int64_t target, reg_t addr,
                              reg_t len, uint8_t* bytes)
 {
-  int rank	=	sim->myid;
-  MPI_Status status;
-
-  // Temporarily go through the MMU address translation
-  reg_t paddr = translate(addr, LOAD);
-  auto host_addr = sim->addr_to_mem(paddr);
-#ifdef DEBUG
-  std::cout << "DEBUG:: Thread " << rank << ", Host Addr = "<< (reg_t)host_addr
-            << ", device addr = "
-            << (reg_t)(sim->mems[0].second->contents()) <<"\n";
-  std::cout << "Thread " << rank << " sent the address offset: "
-            << (reg_t)host_addr - (reg_t)(sim->mems[0].second->contents())
-            <<"\n";
-#endif
-
-  //MPI_Win_fence(0, sim->win);
-  //Target thread
-  if( rank == target ){
-    MPI_Request recv_req;
-    reg_t offset;
-#ifdef DEBUG
-//    std::cout << "DEBUG::  Thread " << rank << " executing the xbgas load\n"; 
-#endif
-    //MPI_Recv(&offset, 1, MPI_UINT64_T, sim->world_size - target - 1, 0, MPI_COMM_WORLD, &status);
-    //std::cout << "Target Thread " << rank << " received the address offset: "<< offset <<" \n"; 
-    //MPI_Send((uint8_t*)(sim->x_mem.first + offset), len, MPI_UINT8_T, sim->world_size - target - 1, 1, MPI_COMM_WORLD);
-    //MPI_Send((uint8_t*)(host_addr), len, MPI_UINT8_T, sim->world_size - target - 1, 1, MPI_COMM_WORLD);
-
-  }else{ // Requestor Threads
-    std::pair<reg_t, reg_t> message;
-    message = std::make_pair(len, addr);
-#ifdef DEBUG
-    std::cout << "DEBUG::  Thread " << rank << " executing the xbgas load\n";
-#endif
-    //MPI_Request send_req;
-    //MPI_Send(&message.second, 1, MPI_UINT64_T, target, 0, MPI_COMM_WORLD);
-    //MPI_Recv(bytes, len, MPI_UINT8_T, target, 1, MPI_COMM_WORLD, &status );
-
-    //MPI_Win_lock(MPI_LOCK_SHARED, target, 0, sim->win);
-    MPI_Win_lock_all(0, sim->win);
-    std::cout << "DEBUG:: Thread " << rank << " acquired the lock; executing Get\n";
-//#if 0
-    MPI_Get(bytes, len, MPI_UINT8_T, target,
-            (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
-            len, MPI_UINT8_T, sim->win);
-//#endif
-#if 0
-    uint8_t *result = NULL;
-    result = new uint8_t[len];
-    MPI_Get_accumulate(bytes, len, MPI_UINT8_T,
-            result, len, MPI_UINT8_T,
-            target,
-            (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
-            len, MPI_UINT8_T, MPI_NO_OP, sim->win);
-    std::cout << "DEBUG:: Thread " << rank << " completed the Get; releasing the lock\n";
-    delete result;
-#endif
-    //MPI_Win_unlock(target, sim->win);
-    MPI_Win_flush(rank,sim->win);
-    MPI_Win_unlock_all(sim->win);
-    std::cout << "DEBUG:: Thread " << rank << " released the lock\n";
-
-    //MPI_Request get_req;
-    //MPI_Win_lock_all(0, sim->win);
-    //MPI_Rget(bytes, len, MPI_UINT8_T, target,
-    //        (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
-    //        len, MPI_UINT8_T, sim->win, &get_req);
-    //MPI_Wait(&get_req,MPI_STATUS_IGNORE);
-    //MPI_Win_unlock_all(sim->win);
-
-  }
-
-  //MPI_Win_fence(0, sim->win);
-  //MPI_Barrier(MPI_COMM_WORLD);
-#ifdef DEBUG
-  std::cout << "DEBUG::  Thread " << rank << " completes the xbgas load\n";
-#endif
+  printf("mmu_t::load_remote_path (%d <- %d): punting on load of %d bytes from 0x%08x\n", sim->myid, target, len, addr);
+  
+  /* rank (sim->myid) == target */
+  /* reg_t paddr = translate(addr, LOAD);
+   * auto host_addr = sim->addr_to_mem(paddr);
+   */
+  memset(bytes, 0, len);
 }
 
 void mmu_t::load_slow_path(reg_t addr, reg_t len, uint8_t* bytes)

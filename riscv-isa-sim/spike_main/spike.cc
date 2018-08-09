@@ -39,7 +39,7 @@ static void help()
   fprintf(stderr, "  --rbb-port=<port>     Listen on <port> for remote bitbang connection\n");
   fprintf(stderr, "  --dump-dts  Print device tree string and exit\n");
   fprintf(stderr, "  ----------- xBGAS Options -----------\n" );
-  fprintf(stderr, "  -x1                  Enable xBGAS extension\n" );
+  fprintf(stderr, "  -x<n>                 Enable xBGAS Extension with n nodes (-xn * -pn total processors)\n" );
   exit(1);
 }
 
@@ -136,37 +136,17 @@ int main(int argc, char** argv)
 #endif
   // Init the xBGAS extensions
   if(xbgas){
+    rank = 0;
+    world_size = xbgas;
 #ifdef DEBUG
-    std::cout << "DEBUG::  xBGAS extension is enabled\n";
-#endif
-    char 	processor_name[MPI_MAX_PROCESSOR_NAME];
-    int	 	name_len;
-
-    // Init the MPI handlers
-    MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Get_processor_name(processor_name, &name_len);
-
-    // Init the MPI Window
-    //MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-    //MPI_Win_attach(win, mems[0].second->contents(), mems[0].second->size());
-    MPI_Win_create(mems[0].second->contents(), mems[0].second->size(), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-    //MPI_Win_fence(0,win);
-
-#ifdef DEBUG
-    std::cout << "DEBUG::  Hello world from processor "
- 	      << processor_name
-	      << ", rank" 	<<  rank
- 	      << " out of " 	<<  world_size
-	      << " processors"    <<  std::endl;
+    std::cout << "DEBUG::  xBGAS extension is enabled with " << world_size << " nodes simulated\n";
 #endif
   }/* end if(xbgas) */
 
   //if(xbgas == true && shared_mem.first == NULL)
   //shared_mem = make_shared_mem("512");
   sim_t s(isa, nprocs, halted, start_pc, mems, htif_args,
-          world_size, rank, xbgas, win);
+          world_size, rank, xbgas);
 
   // Init OLB in each core
   if (xbgas){
@@ -205,14 +185,6 @@ int main(int argc, char** argv)
   s.set_log(log);
   s.set_histogram(histogram);
   ret = s.run();
-
-  if(xbgas){
-    //MPI_Win_detach(win,mems[0].second->contents());
-    MPI_Barrier(MPI_COMM_WORLD);
-    //MPI_Win_fence(0,win);
-    MPI_Win_free(&win);
-    MPI_Finalize();
-  }
 
   return ret;
 }

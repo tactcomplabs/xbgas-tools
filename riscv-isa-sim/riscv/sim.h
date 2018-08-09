@@ -11,7 +11,6 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include <mpi.h>
 
 class mmu_t;
 class remote_bitbang_t;
@@ -23,7 +22,7 @@ public:
   sim_t(const char* isa, size_t _nprocs,  bool halted, reg_t start_pc,
         std::vector<std::pair<reg_t, mem_t*>> mems,
         const std::vector<std::string>& args,
-	int world_size, int myid, int xbgas, MPI_Win win);
+	int world_size, int myid, int xbgas);
   ~sim_t();
 
   // run the simulation to completion
@@ -73,7 +72,6 @@ private:
   int world_size;
   int myid;
   int xbgas;
-  MPI_Win win;
 
   // memory-mapped I/O routines
   char* addr_to_mem(reg_t addr);
