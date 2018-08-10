@@ -181,20 +181,6 @@ void sim_t::set_procs_debug(bool value)
     procs[i]->set_debug(value);
 }
 
-bool sim_t::mmio_load(reg_t addr, size_t len, uint8_t* bytes)
-{
-  if (addr + len < addr)
-    return false;
-  return bus.load(addr, len, bytes);
-}
-
-bool sim_t::mmio_store(reg_t addr, size_t len, const uint8_t* bytes)
-{
-  if (addr + len < addr)
-    return false;
-  return bus.store(addr, len, bytes);
-}
-
 static std::string dts_compile(const std::string& dts)
 {
   // Convert the DTS to DTB

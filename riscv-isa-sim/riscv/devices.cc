@@ -7,6 +7,8 @@ void bus_t::add_device(reg_t addr, abstract_device_t* dev)
 
 bool bus_t::load(reg_t addr, size_t len, uint8_t* bytes)
 {
+  if (addr + len < addr)
+    return false;
   auto it = devices.lower_bound(-addr);
   if (it == devices.end())
     return false;
@@ -15,6 +17,8 @@ bool bus_t::load(reg_t addr, size_t len, uint8_t* bytes)
 
 bool bus_t::store(reg_t addr, size_t len, const uint8_t* bytes)
 {
+  if (addr + len < addr)
+    return false;
   auto it = devices.lower_bound(-addr);
   if (it == devices.end())
     return false;

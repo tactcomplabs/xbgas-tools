@@ -63,7 +63,7 @@ tlb_entry_t mmu_t::fetch_slow_path(reg_t vaddr)
   if (auto host_addr = sim->bus.addr_to_mem(paddr)) {
     return refill_tlb(vaddr, paddr, host_addr, FETCH);
   } else {
-    if (!sim->mmio_load(paddr, sizeof fetch_temp, (uint8_t*)&fetch_temp))
+    if (!sim->bus.load(paddr, sizeof fetch_temp, (uint8_t*)&fetch_temp))
       throw trap_instruction_access_fault(vaddr);
     tlb_entry_t entry = {(char*)&fetch_temp - vaddr, paddr - vaddr};
     return entry;
@@ -132,7 +132,7 @@ void mmu_t::load_slow_path(reg_t addr, reg_t len, uint8_t* bytes)
       tracer.trace(paddr, len, LOAD);
     else
       refill_tlb(addr, paddr, host_addr, LOAD);
-  } else if (!sim->mmio_load(paddr, len, bytes)) {
+  } else if (!sim->bus.load(paddr, len, bytes)) {
     throw trap_load_access_fault(addr);
   }
 
@@ -161,7 +161,7 @@ void mmu_t::store_slow_path(reg_t addr, reg_t len, const uint8_t* bytes)
       tracer.trace(paddr, len, STORE);
     else
       refill_tlb(addr, paddr, host_addr, STORE);
-  } else if (!sim->mmio_store(paddr, len, bytes)) {
+  } else if (!sim->bus.store(paddr, len, bytes)) {
     throw trap_store_access_fault(addr);
   }
 }
