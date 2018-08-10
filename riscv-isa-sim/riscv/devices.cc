@@ -28,3 +28,11 @@ std::pair<reg_t, abstract_device_t*> bus_t::find_device(reg_t addr)
     return std::make_pair((reg_t)0, (abstract_device_t*)NULL);
   return std::make_pair(-it->first, it->second);
 }
+
+char* bus_t::addr_to_mem(reg_t addr) {
+  auto desc = find_device(addr);
+  if (auto mem = dynamic_cast<mem_t*>(desc.second))
+    if (addr - desc.first < mem->size())
+      return mem->contents() + (addr - desc.first);
+  return NULL;
+}

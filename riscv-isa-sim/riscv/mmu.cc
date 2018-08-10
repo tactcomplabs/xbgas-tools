@@ -60,7 +60,7 @@ tlb_entry_t mmu_t::fetch_slow_path(reg_t vaddr)
 {
   reg_t paddr = translate(vaddr, FETCH);
   // host_addr is the real address (va) in the allocted memory 
-  if (auto host_addr = sim->addr_to_mem(paddr)) {
+  if (auto host_addr = sim->bus.addr_to_mem(paddr)) {
     return refill_tlb(vaddr, paddr, host_addr, FETCH);
   } else {
     if (!sim->mmio_load(paddr, sizeof fetch_temp, (uint8_t*)&fetch_temp))
@@ -126,7 +126,7 @@ void mmu_t::load_slow_path(reg_t addr, reg_t len, uint8_t* bytes)
 {
   reg_t paddr = translate(addr, LOAD);
 
-  if (auto host_addr = sim->addr_to_mem(paddr)) {
+  if (auto host_addr = sim->bus.addr_to_mem(paddr)) {
     memcpy(bytes, host_addr, len);
     if (tracer.interested_in_range(paddr, paddr + PGSIZE, LOAD))
       tracer.trace(paddr, len, LOAD);
@@ -155,7 +155,7 @@ void mmu_t::store_slow_path(reg_t addr, reg_t len, const uint8_t* bytes)
       throw *matched_trigger;
   }
 
-  if (auto host_addr = sim->addr_to_mem(paddr)) {
+  if (auto host_addr = sim->bus.addr_to_mem(paddr)) {
     memcpy(host_addr, bytes, len);
     if (tracer.interested_in_range(paddr, paddr + PGSIZE, STORE))
       tracer.trace(paddr, len, STORE);
@@ -228,7 +228,7 @@ reg_t mmu_t::walk(reg_t addr, access_type type, reg_t mode)
 
     // check that physical address of PTE is legal
     // ppte is the real VA of the allocated memory for spike
-    auto ppte = sim->addr_to_mem(base + idx * vm.ptesize);
+    auto ppte = sim->bus.addr_to_mem(base + idx * vm.ptesize);
     if (!ppte)
       throw trap_load_access_fault(addr);
     

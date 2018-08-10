@@ -24,6 +24,8 @@ class bus_t : public abstract_device_t {
   void add_device(reg_t addr, abstract_device_t* dev);
 
   std::pair<reg_t, abstract_device_t*> find_device(reg_t addr);
+  
+  char *addr_to_mem(reg_t addr);
 
  private:
   std::map<reg_t, abstract_device_t*> devices;

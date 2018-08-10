@@ -365,14 +365,6 @@ void sim_t::make_dtb()
   bus.add_device(DEFAULT_RSTVEC, boot_rom.get());
 }
 
-char* sim_t::addr_to_mem(reg_t addr) {
-  auto desc = bus.find_device(addr);
-  if (auto mem = dynamic_cast<mem_t*>(desc.second))
-    if (addr - desc.first < mem->size())
-      return mem->contents() + (addr - desc.first);
-  return NULL;
-}
-
 // htif
 
 void sim_t::reset()
