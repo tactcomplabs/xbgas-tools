@@ -20,20 +20,20 @@
 #define STATE state
 
 processor_t::processor_t(const char* isa, sim_t* sim, uint32_t id,
-        bool halt_on_reset, int world_size, int myid)
+        bool halt_on_reset, int world_size, int xbgas_id)
   : debug(false), halt_request(false), sim(sim), ext(NULL), id(id),
-  halt_on_reset(halt_on_reset)
+  halt_on_reset(halt_on_reset), xbgas_id(id)
 {
   parse_isa_string(isa);
   register_base_instructions();
 
-  mmu = new mmu_t(sim, this);
+  mmu = new mmu_t(sim, &sim->bus, this);
   disassembler = new disassembler_t(max_xlen);
 
   reset();
 
   // init xbgas registers
-  WRITE_REG_EXD(10,(reg_t)(myid));
+  WRITE_REG_EXD(10,(reg_t)(xbgas_id));
   WRITE_REG_EXD(11,(reg_t)(world_size));
   WRITE_REG_EXD(12,(reg_t)(0U /* was xBGAS shared memsize */));
   WRITE_REG_EXD(13,(reg_t)(0U /* was xBGAS region start address */));
@@ -61,7 +61,7 @@ static void bad_isa_string(const char* isa)
 }
 
 bool processor_t::enable_xbgas(){
-  return mmu->set_xbgas();
+  return true;
 }
 
 

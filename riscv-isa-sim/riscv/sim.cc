@@ -42,7 +42,7 @@ sim_t::sim_t(const char* isa, size_t nprocs, bool halted, reg_t start_pc,
 
   debug_module.add_device(&bus);
 
-  debug_mmu = new mmu_t(this, NULL);
+  debug_mmu = new mmu_t(this, &bus, NULL);
 
   for (size_t i = 0; i < procs.size(); i++) {
     procs[i] = new processor_t(isa, this, i, halted,

@@ -2,12 +2,13 @@
 
 #include "mmu.h"
 #include "sim.h"
+#include "devices.h"
 #include "processor.h"
 #include <mpi.h>
 #include <iostream>
 #define DEBUG
-mmu_t::mmu_t(sim_t* sim, processor_t* proc)
- : sim(sim), proc(proc),
+mmu_t::mmu_t(sim_t* sim, bus_t* bus, processor_t* proc)
+ : sim(sim), bus(bus), proc(proc),
   check_triggers_fetch(false),
   check_triggers_load(false),
   check_triggers_store(false),
@@ -21,11 +22,10 @@ mmu_t::~mmu_t()
 }
 
 // xBGAS Extensions
-bool mmu_t::set_xbgas(){
-  xbgas_enable = true;
-  return true;
+void mmu_t::xbgas_set_peer(int64_t target, mmu_t *mmu)
+{
+  xbgas_peers[target] = mmu;
 }
-
 
 void mmu_t::flush_icache()
 {
@@ -60,10 +60,10 @@ tlb_entry_t mmu_t::fetch_slow_path(reg_t vaddr)
 {
   reg_t paddr = translate(vaddr, FETCH);
   // host_addr is the real address (va) in the allocted memory 
-  if (auto host_addr = sim->bus.addr_to_mem(paddr)) {
+  if (auto host_addr = bus->addr_to_mem(paddr)) {
     return refill_tlb(vaddr, paddr, host_addr, FETCH);
   } else {
-    if (!sim->bus.load(paddr, sizeof fetch_temp, (uint8_t*)&fetch_temp))
+    if (!bus->load(paddr, sizeof fetch_temp, (uint8_t*)&fetch_temp))
       throw trap_instruction_access_fault(vaddr);
     tlb_entry_t entry = {(char*)&fetch_temp - vaddr, paddr - vaddr};
     return entry;
@@ -100,12 +100,18 @@ reg_t reg_from_bytes(size_t len, const uint8_t* bytes)
 void mmu_t::store_remote_path(int64_t target, reg_t addr,
                               reg_t len, uint8_t *bytes)
 {
-  printf("mmu_t::store_remote_path (%d -> %d): punting on store of %d bytes to 0x%08x\n", sim->myid, target, len, addr);
+  printf("mmu_t::store_remote_path (%d -> %ld): %ld bytes to 0x%08lx\n", proc->xbgas_id, target, len, addr);
   
-  /* rank (sim->myid) == target */
-  /* reg_t paddr = translate(addr, STORE);
-   * auto host_addr = sim->addr_to_mem(paddr);
-   */
+  if (!xbgas_peers.count(target)) {
+    throw std::runtime_error("physical target " + std::to_string(target) + " does not exist in peers map");
+  }
+  mmu_t *peer = xbgas_peers[target];
+  reg_t paddr = peer->translate(addr, STORE);
+  auto host_addr = peer->bus->addr_to_mem(paddr);
+  if (!host_addr)
+    throw std::runtime_error("unhandled case: translation failure for remote store");
+  
+  memcpy(host_addr, bytes, len);
 }
 
 // NOTE: currently used to trasnfer a "single" data element between two threads
@@ -113,26 +119,31 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 void mmu_t::load_remote_path(int64_t target, reg_t addr,
                              reg_t len, uint8_t* bytes)
 {
-  printf("mmu_t::load_remote_path (%d <- %d): punting on load of %d bytes from 0x%08x\n", sim->myid, target, len, addr);
+  printf("mmu_t::load_remote_path (%d <- %ld): %ld bytes from 0x%08lx\n", proc->xbgas_id, target, len, addr);
+
+  if (!xbgas_peers.count(target)) {
+    throw std::runtime_error("physical target " + std::to_string(target) + " does not exist in peers map");
+  }
+  mmu_t *peer = xbgas_peers[target];
+  reg_t paddr = peer->translate(addr, LOAD);
+  auto host_addr = peer->bus->addr_to_mem(paddr);
+  if (!host_addr)
+    throw std::runtime_error("unhandled case: translation failure for remote load");
   
-  /* rank (sim->myid) == target */
-  /* reg_t paddr = translate(addr, LOAD);
-   * auto host_addr = sim->addr_to_mem(paddr);
-   */
-  memset(bytes, 0, len);
+  memcpy(bytes, host_addr, len);
 }
 
 void mmu_t::load_slow_path(reg_t addr, reg_t len, uint8_t* bytes)
 {
   reg_t paddr = translate(addr, LOAD);
 
-  if (auto host_addr = sim->bus.addr_to_mem(paddr)) {
+  if (auto host_addr = bus->addr_to_mem(paddr)) {
     memcpy(bytes, host_addr, len);
     if (tracer.interested_in_range(paddr, paddr + PGSIZE, LOAD))
       tracer.trace(paddr, len, LOAD);
     else
       refill_tlb(addr, paddr, host_addr, LOAD);
-  } else if (!sim->bus.load(paddr, len, bytes)) {
+  } else if (!bus->load(paddr, len, bytes)) {
     throw trap_load_access_fault(addr);
   }
 
@@ -155,13 +166,13 @@ void mmu_t::store_slow_path(reg_t addr, reg_t len, const uint8_t* bytes)
       throw *matched_trigger;
   }
 
-  if (auto host_addr = sim->bus.addr_to_mem(paddr)) {
+  if (auto host_addr = bus->addr_to_mem(paddr)) {
     memcpy(host_addr, bytes, len);
     if (tracer.interested_in_range(paddr, paddr + PGSIZE, STORE))
       tracer.trace(paddr, len, STORE);
     else
       refill_tlb(addr, paddr, host_addr, STORE);
-  } else if (!sim->bus.store(paddr, len, bytes)) {
+  } else if (!bus->store(paddr, len, bytes)) {
     throw trap_store_access_fault(addr);
   }
 }
@@ -228,7 +239,7 @@ reg_t mmu_t::walk(reg_t addr, access_type type, reg_t mode)
 
     // check that physical address of PTE is legal
     // ppte is the real VA of the allocated memory for spike
-    auto ppte = sim->bus.addr_to_mem(base + idx * vm.ptesize);
+    auto ppte = bus->addr_to_mem(base + idx * vm.ptesize);
     if (!ppte)
       throw trap_load_access_fault(addr);
     

@@ -164,7 +164,7 @@ class processor_t : public abstract_device_t
 public:
   processor_t(const char* isa, sim_t* sim, uint32_t id,
               bool halt_on_reset=false,
-              int world_size=0, int myid=0);                  //xbgas
+              int world_size=0, int xbgas_id=0);                  //xbgas
   ~processor_t();
 
   void set_debug(bool value);
@@ -303,6 +303,8 @@ private:
   std::string isa_string;
   bool histogram_enabled;
   bool halt_on_reset;
+  
+  int xbgas_id;
 
   std::vector<insn_desc_t> instructions;
   std::map<reg_t,uint64_t> pc_histogram;

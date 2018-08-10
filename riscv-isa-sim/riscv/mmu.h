@@ -7,11 +7,13 @@
 #include "trap.h"
 #include "common.h"
 #include "config.h"
+#include "devices.h"
 #include "sim.h"
 #include "processor.h"
 #include "memtracer.h"
 #include <stdlib.h>
 #include <vector>
+#include <map>
 #include <encoding.h>
 #include <iostream>
 // virtual memory configuration
@@ -64,7 +66,7 @@ class trigger_matched_t
 class mmu_t
 {
 public:
-  mmu_t(sim_t* sim, processor_t* proc);
+  mmu_t(sim_t* sim, bus_t* bus, processor_t* proc);
   ~mmu_t();
 
   inline reg_t misaligned_load(reg_t addr, size_t size)
@@ -297,15 +299,16 @@ public:
   void store_remote_path(int64_t target, reg_t addr, reg_t len, uint8_t* bytes);
   void register_memtracer(memtracer_t*);
   // xbgas extensions
-  bool set_xbgas();
+  void xbgas_set_peer(int64_t target, mmu_t *mmu);
 
 private:
   sim_t* sim;
+  bus_t* bus;
   processor_t* proc;
   memtracer_list_t tracer;
   uint16_t fetch_temp;
   // xbgas extensions
-  bool xbgas_enable;
+  std::map<int64_t, mmu_t *> xbgas_peers;
 
   // implement an instruction cache for simulator performance
   icache_entry_t icache[ICACHE_ENTRIES];
