@@ -156,37 +156,51 @@ void htif_t::clear_chunk(addr_t taddr, size_t len)
     write_chunk(taddr + pos, std::min(len - pos, chunk_max_size()), zeros);
 }
 
-int htif_t::run()
+int htif_t::step_one()
 {
-  start();
-
-  auto enq_func = [](std::queue<reg_t>* q, uint64_t x) { q->push(x); };
-  std::queue<reg_t> fromhost_queue;
-  std::function<void(reg_t)> fromhost_callback =
-    std::bind(enq_func, &fromhost_queue, std::placeholders::_1);
-
+  if (signal_exit)
+    return -1;
+  if (exitcode)
+    return exitcode >> 1;
+  
   if (tohost_addr == 0) {
-    while (true)
-      idle();
-  }
+    idle();
+  } else {
+    auto enq_func = [](std::queue<reg_t>* q, uint64_t x) { q->push(x); };
+    std::queue<reg_t> fromhost_queue;
+    std::function<void(reg_t)> fromhost_callback =
+      std::bind(enq_func, &fromhost_queue, std::placeholders::_1);
 
-  while (!signal_exit && exitcode == 0)
-  {
     if (auto tohost = mem.read_uint64(tohost_addr)) {
       mem.write_uint64(tohost_addr, 0);
       command_t cmd(this, tohost, fromhost_callback);
       device_list.handle_command(cmd);
-    } else {
-      idle();
-    }
+    }  else {
+       idle();
+    } 
 
     device_list.tick();
-
     if (!fromhost_queue.empty() && mem.read_uint64(fromhost_addr) == 0) {
       mem.write_uint64(fromhost_addr, fromhost_queue.front());
       fromhost_queue.pop();
     }
   }
+  
+  if (signal_exit)
+    return -1;
+  if (exitcode)
+    return exitcode >> 1;
+  return 0;
+}
+
+int htif_t::run()
+{
+  start();
+
+  int rv = 0; 
+  do {
+    rv = step_one();
+  } while (!rv);
 
   stop();
 

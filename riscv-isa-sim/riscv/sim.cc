@@ -128,11 +128,12 @@ void sim_t::main()
   }
 }
 
-int sim_t::run()
+void sim_t::start()
 {
   host = context_t::current();
   target.init(sim_thread_main, this);
-  return htif_t::run();
+  
+  htif_t::start();
 }
 
 void sim_t::step(size_t n)

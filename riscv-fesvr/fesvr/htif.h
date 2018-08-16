@@ -19,6 +19,7 @@ class htif_t
   virtual void stop();
 
   int run();
+  int step_one();
   bool done();
   int exit_code();
 

@@ -81,7 +81,6 @@ int main(int argc, char** argv)
   bool dump_dts = false;
   size_t nprocs = 1;
   reg_t start_pc = reg_t(-1);
-  std::vector<std::pair<reg_t, mem_t*>> mems;
   std::unique_ptr<icache_sim_t> ic;
   std::unique_ptr<dcache_sim_t> dc;
   std::unique_ptr<cache_sim_t> l2;
@@ -91,7 +90,7 @@ int main(int argc, char** argv)
   bool use_rbb = false;
   int ret;
   // xbgas extensions
-  int 	xbgas       = 0;
+  int 	xbgas       = 1;
   int	rank        = 0;
   int 	world_size  = 0;
   const char *memspec = "2048";
@@ -130,10 +129,6 @@ int main(int argc, char** argv)
 
   auto argv1 = parser.parse(argv);
   std::vector<std::string> htif_args(argv1, (const char*const*)argv + argc);
-  mems = make_mems(memspec);
-#ifdef DEBUG
-  std::cout<< "DEBUG::  Allocated memory address is 0x" << (reg_t)mems[0].second->contents() << std::hex << std::endl;  
-#endif
   // Init the xBGAS extensions
   if(xbgas){
     rank = 0;
@@ -145,24 +140,36 @@ int main(int argc, char** argv)
 
   //if(xbgas == true && shared_mem.first == NULL)
   //shared_mem = make_shared_mem("512");
-  sim_t s(isa, nprocs, halted, start_pc, mems, htif_args,
-          world_size, rank, xbgas);
+  std::vector<sim_t *> sims;
+  if ((xbgas > 1) && (ic || dc || l2)) {
+    throw std::runtime_error("IC/DC/L2 not supported in xBGAS mode");
+  }
+  
+  for (int node = 0; node < xbgas; node++) {
+    std::vector<std::pair<reg_t, mem_t*>> mems = make_mems(memspec);
+  
+    sim_t *s = new sim_t(isa, nprocs, halted, start_pc, mems, htif_args,
+                         world_size, node, world_size);
+    sims.push_back(s);
 
-  // Init OLB in each core
-  if (xbgas){
-    if(s.olb_init() == -1)
+    if(s->olb_init() == -1)
       throw std::runtime_error("olb init failed\n");
+    
+    s->get_core(0)->enable_xbgas();
+    s->set_debug(debug);
+    s->set_log(log);
+    s->set_histogram(histogram);
   }
 
   std::unique_ptr<remote_bitbang_t> remote_bitbang((remote_bitbang_t *) NULL);
-  std::unique_ptr<jtag_dtm_t> jtag_dtm(new jtag_dtm_t(&s.debug_module));
+  std::unique_ptr<jtag_dtm_t> jtag_dtm(new jtag_dtm_t(&sims[0]->debug_module));
   if (use_rbb) {
     remote_bitbang.reset(new remote_bitbang_t(rbb_port, &(*jtag_dtm)));
-    s.set_remote_bitbang(&(*remote_bitbang));
+    sims[0]->set_remote_bitbang(&(*remote_bitbang));
   }
 
   if (dump_dts) {
-    printf("%s", s.get_dts());
+    printf("%s", sims[0]->get_dts());
     return 0;
   }
 
@@ -173,18 +180,25 @@ int main(int argc, char** argv)
   if (dc && l2) dc->set_miss_handler(&*l2);
   for (size_t i = 0; i < nprocs; i++)
   {
-    if (ic) s.get_core(i)->get_mmu()->register_memtracer(&*ic);
-    if (dc) s.get_core(i)->get_mmu()->register_memtracer(&*dc);
-    if (extension) s.get_core(i)->register_extension(extension());
+    if (ic) sims[0]->get_core(i)->get_mmu()->register_memtracer(&*ic);
+    if (dc) sims[0]->get_core(i)->get_mmu()->register_memtracer(&*dc);
+    if (extension) sims[0]->get_core(i)->register_extension(extension());
   }
 
-  // xBGAS Extensions
-  if(xbgas) s.get_core(0)->enable_xbgas();
-
-  s.set_debug(debug);
-  s.set_log(log);
-  s.set_histogram(histogram);
-  ret = s.run();
+  /* Lock and load. */
+  for (int node = 0; node < xbgas; node++)
+    sims[node]->start();
+  
+  do {
+    for (int node = 0; node < xbgas; node++) {
+      ret = sims[node]->step_one();
+      if (ret)
+        break;
+    }
+  } while (!ret);
+  
+  for (int node = 0; node < xbgas; node++)
+    sims[node]->stop();
 
   return ret;
 }

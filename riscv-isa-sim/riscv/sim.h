@@ -26,7 +26,7 @@ public:
   ~sim_t();
 
   // run the simulation to completion
-  int run();
+  virtual void start();
   void set_debug(bool value);
   void set_log(bool value);
   void set_histogram(bool value);
