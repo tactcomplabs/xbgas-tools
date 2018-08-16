@@ -64,6 +64,10 @@ bool processor_t::enable_xbgas(){
   return true;
 }
 
+void processor_t::xbgas_set_peer(int64_t target, processor_t *proc)
+{
+  mmu->xbgas_set_peer(target, proc->mmu);
+}
 
 void processor_t::parse_isa_string(const char* str)
 {

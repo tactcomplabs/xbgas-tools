@@ -288,6 +288,8 @@ public:
 
   void trigger_updated();
   bool enable_xbgas();
+  
+  void xbgas_set_peer(int64_t target, processor_t *proc);
 
 private:
   sim_t* sim;

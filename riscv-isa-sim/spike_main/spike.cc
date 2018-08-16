@@ -160,6 +160,13 @@ int main(int argc, char** argv)
     s->set_log(log);
     s->set_histogram(histogram);
   }
+  
+  /* Now set up all the peers. */
+  for (int i = 0; i < xbgas; i++) {
+    for (int j = 0; j < xbgas; j++) {
+      sims[i]->xbgas_set_peer(j, sims[j]);
+    }
+  }
 
   std::unique_ptr<remote_bitbang_t> remote_bitbang((remote_bitbang_t *) NULL);
   std::unique_ptr<jtag_dtm_t> jtag_dtm(new jtag_dtm_t(&sims[0]->debug_module));

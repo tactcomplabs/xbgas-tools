@@ -106,6 +106,13 @@ int sim_t::olb_visit(reg_t addr)
   return -1;
 }
 
+void sim_t::xbgas_set_peer(int64_t target, sim_t *sim)
+{
+  for (auto &x: procs) {
+    x->xbgas_set_peer(target, sim->procs[0]);
+  }
+}
+
 void sim_thread_main(void* arg)
 {
   ((sim_t*)arg)->main();

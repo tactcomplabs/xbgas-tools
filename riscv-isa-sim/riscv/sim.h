@@ -43,6 +43,7 @@ public:
   // xbgas extension
   int olb_init();
   int olb_visit(reg_t addr);
+  void xbgas_set_peer(int64_t target, sim_t *sim);
 
 private:
   std::vector<std::pair<reg_t, mem_t*>> mems;
