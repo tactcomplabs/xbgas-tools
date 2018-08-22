@@ -198,14 +198,24 @@ int main(int argc, char** argv)
   
   do {
     for (int node = 0; node < xbgas; node++) {
-      ret = sims[node]->step_one();
+      ret |= sims[node]->step_one();
+#if 0
       if (ret)
         break;
+#endif
     }
   } while (!ret);
   
   for (int node = 0; node < xbgas; node++)
     sims[node]->stop();
 
-  return ret;
+  /* collect all the return codes; if any of them are nonzero,
+   * return the nonzero code
+   */
+  int rtn_code = 0;
+  for( int node = 0; node < xbgas; node++ ){
+    rtn_code |= sims[node]->exit_code();
+  }
+
+  return rtn_code;
 }

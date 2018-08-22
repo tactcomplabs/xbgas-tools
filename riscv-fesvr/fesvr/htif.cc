@@ -161,7 +161,8 @@ int htif_t::step_one()
   if (signal_exit)
     return -1;
   if (exitcode)
-    return exitcode >> 1;
+    return exitcode << 1;
+    //return exitcode >> 1;
   
   if (tohost_addr == 0) {
     idle();
@@ -189,7 +190,8 @@ int htif_t::step_one()
   if (signal_exit)
     return -1;
   if (exitcode)
-    return exitcode >> 1;
+    return exitcode << 1;
+    //return exitcode >> 1;
   return 0;
 }
 
