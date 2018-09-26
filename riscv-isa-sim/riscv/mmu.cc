@@ -130,6 +130,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
   }else{ //Requster thread
 #ifdef DEBUG
     std::cout << "DEBUG:: Thread " << rank << " executing the xbgas store\n";
+		uint64_t buf = 66;
 #endif
 
     //MPI_Win_lock(MPI_LOCK_SHARED, target, 0, sim->win);
@@ -144,10 +145,21 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
     MPI_Accumulate(bytes, len, MPI_UINT8_T, target,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
             len, MPI_UINT8_T, MPI_REPLACE, sim->win);
+#ifdef DEBUG
+		// Check the stored value
+		MPI_Get((uint8_t*)&buf, len, MPI_UINT8_T, target,
+						(MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
+						len, MPI_UINT8_T, sim->win);
+#endif
+
     MPI_Win_flush(rank,sim->win);
     std::cout << "DEBUG:: Thread " << rank << " Put complete; unlocking\n";
     //MPI_Win_unlock(target, sim->win);
     MPI_Win_unlock_all(sim->win);
+#ifdef DEBUG
+    std::cout << "DEBUG:: Thread " << rank << " remote value = " << (uint64_t)(buf)
+    					<< " stored value = "<<(uint64_t)(*bytes) << "\n";
+#endif
     std::cout << "DEBUG:: Thread " << rank << " unlock complete\n";
 
     //MPI_Request put_req;

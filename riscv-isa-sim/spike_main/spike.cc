@@ -141,9 +141,10 @@ int main(int argc, char** argv)
 #endif
     char 	processor_name[MPI_MAX_PROCESSOR_NAME];
     int	 	name_len;
-
+		int 	provided;
     // Init the MPI handlers
-    MPI_Init(&argc, &argv);
+    //MPI_Init(&argc, &argv);
+		MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Get_processor_name(processor_name, &name_len);
