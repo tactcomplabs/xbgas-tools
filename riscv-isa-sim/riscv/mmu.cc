@@ -11,7 +11,8 @@ mmu_t::mmu_t(sim_t* sim, processor_t* proc)
   check_triggers_fetch(false),
   check_triggers_load(false),
   check_triggers_store(false),
-  matched_trigger(NULL)
+  matched_trigger(NULL),
+  sst_func(NULL)
 {
   flush_tlb();
 }
