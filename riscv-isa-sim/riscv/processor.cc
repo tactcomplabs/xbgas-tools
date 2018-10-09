@@ -778,3 +778,7 @@ void processor_t::trigger_updated()
     }
   }
 }
+
+void processor_t::set_sst_func( void *ptr ) {
+  mmu->set_sst_func(ptr);
+}

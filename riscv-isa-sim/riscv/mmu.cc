@@ -428,3 +428,7 @@ void mmu_t::register_memtracer(memtracer_t* t)
   flush_tlb();
   tracer.hook(t);
 }
+
+void mmu_t::set_sst_func( void *ptr ){
+  sst_func = (void (*)(uint64_t,uint32_t,bool,bool,bool,bool,uint32_t))(ptr);
+}

@@ -289,6 +289,8 @@ public:
   void trigger_updated();
   bool enable_xbgas();
 
+  void set_sst_func( void *ptr );
+
 private:
   sim_t* sim;
   mmu_t* mmu; // main memory is always accessed via the mmu
