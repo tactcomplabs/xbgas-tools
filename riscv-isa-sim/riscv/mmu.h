@@ -141,6 +141,9 @@ public:
       }\
       type##_t res; \
       std::cout <<"DEBUG::  The "<< "xbgas_load_" <<#type<<" initiating load_remote_path\n";\
+      if( sst_func != NULL ){ \
+        (*sst_func)(lower,sizeof(type##_t),false,false,false,true,sizeof(type##_t)); \
+      } \
       load_remote_path(target, lower, sizeof(type##_t), (uint8_t*)&res); \
       std::cout <<"DEBUG::  The "<< "xbgas_load_" <<#type<<" is executed successfully\n";\
       return res; \
@@ -206,6 +209,9 @@ public:
         throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
       }\
       std::cout <<"DEBUG::  The "<< "xbgas_store_" <<#type<<" initiating store_remote_path\n";\
+      if( sst_func != NULL ){ \
+        (*sst_func)(addr,sizeof(type##_t),false,false,false,true,sizeof(type##_t)<<16); \
+      } \
       store_remote_path(target, addr, sizeof(type##_t), (uint8_t*)&val); \
       std::cout <<"DEBUG::  The "<< "xbgas_store_" <<#type<<" are executed successfully\n";\
     }
