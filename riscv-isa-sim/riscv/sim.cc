@@ -22,6 +22,29 @@ static void handle_signal(int sig)
   signal(sig, &handle_signal);
 }
 
+sim_t::sim_t(const char* isa, size_t nprocs, bool halted, reg_t start_pc,
+             std::vector<std::pair<reg_t, mem_t*>> mems,
+             const std::vector<std::string>& args,
+	     std::vector<int> const hartids, unsigned progsize,
+             unsigned max_bus_master_bits, bool require_authentication)
+  : htif_t(args), debug_module(this), mems(mems),
+    procs(std::max(nprocs, size_t(1))),
+    start_pc(start_pc),
+    current_step(0), current_proc(0), debug(false), remote_bitbang(NULL)
+{
+  signal(SIGINT, &handle_signal);
+   // by default, only one memory devices
+  for (auto& x : mems)
+    bus.add_device(x.first, x.second);
+   debug_module.add_device(&bus);
+   debug_mmu = new mmu_t(this, &bus, NULL);
+   for (size_t i = 0; i < procs.size(); i++) {
+    procs[i] = new processor_t(isa, this, i, halted,
+                               world_size, myid);
+  }
+   clint.reset(new clint_t(procs));
+  bus.add_device(CLINT_BASE, clint.get());
+}
 
 sim_t::sim_t(const char* isa, size_t nprocs, bool halted, reg_t start_pc,
              std::vector<std::pair<reg_t, mem_t*>> mems,
@@ -133,6 +156,13 @@ void sim_t::main()
       remote_bitbang->tick();
     }
   }
+}
+
+int sim_t::run()
+{
+  host = context_t::current();
+  target.init(sim_thread_main, this);
+  return htif_t::run();
 }
 
 void sim_t::start()

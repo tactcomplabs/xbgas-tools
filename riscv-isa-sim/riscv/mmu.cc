@@ -12,7 +12,8 @@ mmu_t::mmu_t(sim_t* sim, bus_t* bus, processor_t* proc)
   check_triggers_fetch(false),
   check_triggers_load(false),
   check_triggers_store(false),
-  matched_trigger(NULL)
+  matched_trigger(NULL),
+  sst_func(NULL)
 {
   flush_tlb();
 }
@@ -299,4 +300,8 @@ void mmu_t::register_memtracer(memtracer_t* t)
 {
   flush_tlb();
   tracer.hook(t);
+}
+
+void mmu_t::set_sst_func( void *ptr ){
+  sst_func = (void (*)(uint64_t,uint32_t,bool,bool,bool,bool,uint32_t))(ptr);
 }

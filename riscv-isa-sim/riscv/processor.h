@@ -291,6 +291,8 @@ public:
   
   void xbgas_set_peer(int64_t target, processor_t *proc);
 
+  void set_sst_func( void *ptr );
+
 private:
   sim_t* sim;
   mmu_t* mmu; // main memory is always accessed via the mmu

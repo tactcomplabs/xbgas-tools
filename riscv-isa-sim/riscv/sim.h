@@ -22,11 +22,17 @@ public:
   sim_t(const char* isa, size_t _nprocs,  bool halted, reg_t start_pc,
         std::vector<std::pair<reg_t, mem_t*>> mems,
         const std::vector<std::string>& args,
+	const std::vector<int> hartids,
+        unsigned progsize, unsigned max_bus_master_bits, bool require_authentication);
+  sim_t(const char* isa, size_t _nprocs,  bool halted, reg_t start_pc,
+        std::vector<std::pair<reg_t, mem_t*>> mems,
+        const std::vector<std::string>& args,
 	int world_size, int myid, int xbgas);
   ~sim_t();
 
   // run the simulation to completion
   virtual void start();
+  int run();
   void set_debug(bool value);
   void set_log(bool value);
   void set_histogram(bool value);
@@ -44,6 +50,12 @@ public:
   int olb_init();
   int olb_visit(reg_t addr);
   void xbgas_set_peer(int64_t target, sim_t *sim);
+
+  void set_sst_func( void *ptr ){
+    for( unsigned i=0; i<procs.size(); i++ ){
+      procs[i]->set_sst_func(ptr);
+    }
+  }
 
 private:
   std::vector<std::pair<reg_t, mem_t*>> mems;
