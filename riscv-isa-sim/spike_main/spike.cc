@@ -15,7 +15,7 @@
 #include <mpi.h>
 
 
-#define DEBUG
+//#define DEBUG
 static void help()
 {
   fprintf(stderr, "usage: spike [host options] <target program> [target options]\n");

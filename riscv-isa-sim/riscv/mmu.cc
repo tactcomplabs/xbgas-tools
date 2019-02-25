@@ -5,7 +5,8 @@
 #include "processor.h"
 #include <mpi.h>
 #include <iostream>
-#define DEBUG
+//#define DEBUG
+#undef DEBUG
 mmu_t::mmu_t(sim_t* sim, processor_t* proc)
  : sim(sim), proc(proc),
   check_triggers_fetch(false),
@@ -103,7 +104,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 
 #ifdef DEBUG
   std::cout << "DEBUG::  Target ID = "
-            << target << " Local Addr = " << addr << " value = "
+            << target << " Local Addr = " <<std::hex <<addr << " value = "
             << std::dec<<(uint64_t)(*bytes) << std::endl;
 #endif
   int rank	=	sim->myid;
@@ -130,38 +131,57 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
   }else{ //Requster thread
 #ifdef DEBUG
     std::cout << "DEBUG:: Thread " << rank << " executing the xbgas store\n";
+#endif
 		uint64_t buf = 66;
+		uint64_t addr_offset = host_addr - (sim->mems[0].second->contents());
+		MPI_Request mpi_rqst;
+		//std::cout << "DEBUG:: Thread " << rank << " address offset = "<< std::hex << addr_offset <<std::endl;
+#ifdef DEBUG
+    std::cout << "DEBUG:: Thread " << rank << " acquiring the lock\n";
+#endif
+//    MPI_Win_lock( MPI_LOCK_EXCLUSIVE, target, 0, sim->win);
+    MPI_Win_lock_all(0, sim->win);
+#ifdef DEBUG
+    std::cout << "DEBUG:: Thread " << rank << " acquired the lock, sending Put\n";
+#endif
+   if(MPI_SUCCESS != MPI_Put(bytes, len, MPI_UINT8_T, target,
+            (MPI_Aint)addr_offset,len, MPI_UINT8_T, sim->win))
+   //if(MPI_SUCCESS != MPI_Put(bytes, len, MPI_UINT8_T, target,
+     //       (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
+       //     len, MPI_UINT8_T, sim->win))
+			printf( "\033[1m\033[31m SPIKE: MPI_PUT FAILED\n \x1B[0m");
+
+#if 0
+    if(MPI_SUCCESS != MPI_Accumulate(bytes, len, MPI_UINT8_T, target,
+            (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
+            len, MPI_UINT8_T, MPI_REPLACE, sim->win))
+			printf( "\033[1m\033[31m SPIKE: MPI_PUT FAILED\n \x1B[0m");
 #endif
 
-    //MPI_Win_lock(MPI_LOCK_SHARED, target, 0, sim->win);
-    std::cout << "DEBUG:: Thread " << rank << " acquiring the lock\n";
-    MPI_Win_lock_all(0, sim->win);
-    std::cout << "DEBUG:: Thread " << rank << " acquired the lock, sending Put\n";
-#if 0
-    MPI_Put(bytes, len, MPI_UINT8_T, target,
-            (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
-            len, MPI_UINT8_T, sim->win);
-#endif
-    MPI_Accumulate(bytes, len, MPI_UINT8_T, target,
-            (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
-            len, MPI_UINT8_T, MPI_REPLACE, sim->win);
+    if(MPI_SUCCESS != MPI_Win_flush(target, sim->win))
+			printf( "\033[1m\033[31m SPIKE: MPI_FLUSH FAILED\n \x1B[0m");
+    //MPI_Win_flush_all(sim->win);
+
+
 #ifdef DEBUG
 		// Check the stored value
 		MPI_Get((uint8_t*)&buf, len, MPI_UINT8_T, target,
-						(MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
-						len, MPI_UINT8_T, sim->win);
+						(MPI_Aint)addr_offset,len, MPI_UINT8_T, sim->win);
+    if(MPI_SUCCESS != MPI_Win_flush(target, sim->win))
+			printf( "\033[1m\033[31m SPIKE: MPI_FLUSH FAILED\n \x1B[0m");
 #endif
-
-    MPI_Win_flush(rank,sim->win);
+#ifdef DEBUG
     std::cout << "DEBUG:: Thread " << rank << " Put complete; unlocking\n";
+#endif
     //MPI_Win_unlock(target, sim->win);
     MPI_Win_unlock_all(sim->win);
 #ifdef DEBUG
-    std::cout << "DEBUG:: Thread " << rank << " remote value = " << (uint64_t)(buf)
+		std::cout << "DEBUG:: Thread " << rank << " address offset = "<< std::hex << addr_offset <<std::endl;
+    std::cout << "DEBUG:: Thread " << rank << " remote value = " <<std::hex<< (uint64_t)(buf)
     					<< " stored value = "<<(uint64_t)(*bytes) << "\n";
-#endif
     std::cout << "DEBUG:: Thread " << rank << " unlock complete\n";
 
+#endif
     //MPI_Request put_req;
     //MPI_Win_lock_all(0, sim->win);
     //MPI_Rput(bytes, len, MPI_UINT8_T, target,
@@ -221,8 +241,12 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
     //MPI_Recv(bytes, len, MPI_UINT8_T, target, 1, MPI_COMM_WORLD, &status );
 
     //MPI_Win_lock(MPI_LOCK_SHARED, target, 0, sim->win);
+    //MPI_Win_lock( MPI_LOCK_EXCLUSIVE, target, 0, sim->win);
+    //MPI_Win_lock( target, sim->win);
     MPI_Win_lock_all(0, sim->win);
+#ifdef DEBUG
     std::cout << "DEBUG:: Thread " << rank << " acquired the lock; executing Get\n";
+#endif
 //#if 0
     MPI_Get(bytes, len, MPI_UINT8_T, target,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
@@ -240,9 +264,12 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
     delete result;
 #endif
     //MPI_Win_unlock(target, sim->win);
-    MPI_Win_flush(rank,sim->win);
+    MPI_Win_flush(target,sim->win);
     MPI_Win_unlock_all(sim->win);
+		//MPI_Win_unlock( target, sim->win);
+#ifdef DEBUG
     std::cout << "DEBUG:: Thread " << rank << " released the lock\n";
+#endif
 
     //MPI_Request get_req;
     //MPI_Win_lock_all(0, sim->win);
@@ -263,6 +290,13 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 
 void mmu_t::load_slow_path(reg_t addr, reg_t len, uint8_t* bytes)
 {
+	/*if (addr == 0xAAAAAAAAAAAAAAAA || addr == 0xBBBBBBBBBBBBBBBB){
+		
+		MPI_Barrier(MPI_COMM_WORLD);
+		std::cout <<"Rank " << sim->myid << " comletes MPI_Barrier\n";
+		//rintf("Rank %d comletes MPI_Barrier\n",sim->myid);
+		return; 
+	}*/
   reg_t paddr = translate(addr, LOAD);
 
   if (auto host_addr = sim->addr_to_mem(paddr)) {
@@ -285,6 +319,14 @@ void mmu_t::load_slow_path(reg_t addr, reg_t len, uint8_t* bytes)
 
 void mmu_t::store_slow_path(reg_t addr, reg_t len, const uint8_t* bytes)
 {
+
+	/*if (addr == 0xAAAAAAAAAAAAAAAA || addr == 0xBBBBBBBBBBBBBBBB){
+		
+		MPI_Barrier(MPI_COMM_WORLD);
+		std::cout <<"Rank " << sim->myid << " comletes MPI_Barrier\n";
+		//rintf("Rank %d comletes MPI_Barrier\n",sim->myid);
+		return; 
+	}*/
   reg_t paddr = translate(addr, STORE);
 
   if (!matched_trigger) {

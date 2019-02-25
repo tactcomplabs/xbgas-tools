@@ -137,12 +137,12 @@ public:
         throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
       }\
       type##_t res; \
-      std::cout <<"DEBUG::  The "<< "xbgas_load_" <<#type<<" initiating load_remote_path\n";\
       load_remote_path(target, lower, sizeof(type##_t), (uint8_t*)&res); \
-      std::cout <<"DEBUG::  The "<< "xbgas_load_" <<#type<<" is executed successfully\n";\
       return res; \
     }
 
+			//std::cout <<"DEBUG::  The "<< "xbgas_load_" <<#type<<" is executed successfully\n";
+      //std::cout <<"DEBUG::  The "<< "xbgas_load_" <<#type<<" initiating load_remote_path\n";
   // load value from remote memory at aligned address; zero extend to register width
   xbgas_load_func(uint64)
   xbgas_load_func(uint32)
@@ -159,6 +159,11 @@ public:
   // template for functions that store an aligned value to memory
   #define store_func(type) \
     void store_##type(reg_t addr, type##_t val) { \
+			if (addr == 0xBB00000000000000ull || addr == 0xAA00000000000000ull){\
+				MPI_Barrier(MPI_COMM_WORLD);\
+				std::cout <<"Rank " << sim->myid << " comletes MPI_Barrier\n";\
+				return;\
+			}\
       if (unlikely(addr & (sizeof(type##_t)-1))) \
         return misaligned_store(addr, val, sizeof(type##_t)); \
       reg_t vpn = addr >> PGSHIFT; \
@@ -199,11 +204,11 @@ public:
       if (unlikely(target == -1)){\
         throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
       }\
-      std::cout <<"DEBUG::  The "<< "xbgas_store_" <<#type<<" initiating store_remote_path\n";\
       store_remote_path(target, addr, sizeof(type##_t), (uint8_t*)&val); \
-      std::cout <<"DEBUG::  The "<< "xbgas_store_" <<#type<<" are executed successfully\n";\
     }
 
+      //std::cout <<"DEBUG::  The "<< "xbgas_store_" <<#type<<" initiating store_remote_path\n";
+      //std::cout <<"DEBUG::  The "<< "xbgas_store_" <<#type<<" are executed successfully\n";
 
   xbgas_store_func(uint128)
   xbgas_store_func(uint64)
