@@ -122,13 +122,13 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 #endif
 
   //MPI_Win_fence(0, sim->win);
-  //Target thread
-  if( rank == target ){
+  //COMMENTED if condition for one-side communications
+  //if( rank == target ){
 
 #ifdef DEBUG
 //    std::cout << "DEBUG::  Thread " << rank << " executing the xbgas store\n";
 #endif
-  }else{ //Requster thread
+  //}else{ //Requster thread
 #ifdef DEBUG
     std::cout << "DEBUG:: Thread " << rank << " executing the xbgas store\n";
 #endif
@@ -188,7 +188,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
     //        (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
     //        len, MPI_UINT8_T, sim->win, &put_req);
     //MPI_Win_unlock_all(sim->win);
-  }
+  //}
 
   //MPI_Win_fence(0, sim->win);
   //MPI_Barrier(MPI_COMM_WORLD);
@@ -219,9 +219,10 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 
   //MPI_Win_fence(0, sim->win);
   //Target thread
-  if( rank == target ){
-    MPI_Request recv_req;
-    reg_t offset;
+  //COMMENTED if condition for one-side communications
+  //if( rank == target ){
+    //MPI_Request recv_req;
+    //reg_t offset;
 #ifdef DEBUG
 //    std::cout << "DEBUG::  Thread " << rank << " executing the xbgas load\n"; 
 #endif
@@ -230,7 +231,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
     //MPI_Send((uint8_t*)(sim->x_mem.first + offset), len, MPI_UINT8_T, sim->world_size - target - 1, 1, MPI_COMM_WORLD);
     //MPI_Send((uint8_t*)(host_addr), len, MPI_UINT8_T, sim->world_size - target - 1, 1, MPI_COMM_WORLD);
 
-  }else{ // Requestor Threads
+  //}else{ // Requestor Threads
     std::pair<reg_t, reg_t> message;
     message = std::make_pair(len, addr);
 #ifdef DEBUG
@@ -279,7 +280,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
     //MPI_Wait(&get_req,MPI_STATUS_IGNORE);
     //MPI_Win_unlock_all(sim->win);
 
-  }
+  //}
 
   //MPI_Win_fence(0, sim->win);
   //MPI_Barrier(MPI_COMM_WORLD);
