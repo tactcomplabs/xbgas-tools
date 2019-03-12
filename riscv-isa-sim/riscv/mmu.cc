@@ -7,6 +7,31 @@
 #include <iostream>
 //#define DEBUG
 #undef DEBUG
+
+enum xbgas_amo{
+	xbgas_add,
+	xbgas_xor,
+	xbgas_and,
+	xbgas_or,
+	xbgas_max,
+	xbgas_min,
+	xbgas_cas,
+	xbgas_unknown
+};
+
+xbgas_amo strhash(std::string const& inString) {
+	    if (inString == "ADD") return xbgas_add;
+			else if (inString == "MAX") return xbgas_max;
+			else if (inString == "MIN") return xbgas_min;
+			else if (inString == "AND") return xbgas_and;
+			else if (inString == "XOR") return xbgas_xor;
+			else if (inString == "OR") return xbgas_or;
+			else if (inString == "CAS") return xbgas_cas;
+			
+			// error type
+		  return xbgas_unknown;
+}
+
 mmu_t::mmu_t(sim_t* sim, processor_t* proc)
  : sim(sim), proc(proc),
   check_triggers_fetch(false),
@@ -96,6 +121,75 @@ reg_t reg_from_bytes(size_t len, const uint8_t* bytes)
   }
   abort();
 }
+
+
+void mmu_t::remote_amo(int64_t target, reg_t addr, reg_t len, uint8_t* bytes, std::string op, uint8_t* results)
+{
+
+	reg_t paddr = translate(addr, LOAD);
+	auto host_addr = sim->addr_to_mem(paddr);
+	uint64_t addr_offset = host_addr - (sim->mems[0].second->contents());
+#ifdef DEBUG
+	if (target == sim->myid)
+		target = 1 - target;
+	printf("remote target = %ld, local addr = %lu, local var = %lu, RS2 = %lu\n", target, addr, *(uint64_t*)host_addr, *bytes);
+#endif
+  MPI_Win_lock_all(0, sim->win);
+	switch (strhash(op))
+	{
+		case xbgas_add:
+		// remote fetch and add
+			MPI_Fetch_and_op(bytes, results, MPI_UINT8_T, target, (MPI_Aint)addr_offset,
+			MPI_SUM,sim->win);
+			break;
+		case xbgas_and:
+		// remote fetch and and
+			MPI_Fetch_and_op(bytes, results, MPI_UINT8_T, target, (MPI_Aint)addr_offset,
+			MPI_LAND,sim->win);
+			break;
+		case xbgas_xor:
+		// remote fetch and and
+			MPI_Fetch_and_op(bytes, results, MPI_UINT8_T, target, (MPI_Aint)addr_offset,
+			MPI_LXOR,sim->win);
+			break;
+		case xbgas_or:
+		// remote fetch and and
+			MPI_Fetch_and_op(bytes, results, MPI_UINT8_T, target, (MPI_Aint)addr_offset,
+			MPI_LOR,sim->win);
+			break;
+			
+		case xbgas_max:
+		// remote fetch and max
+			MPI_Fetch_and_op(bytes, results, MPI_UINT8_T, target, (MPI_Aint)addr_offset,
+			MPI_MAX,sim->win);
+			break;
+		
+		case xbgas_min:
+		// remote fetch and min
+			MPI_Fetch_and_op(bytes, results, MPI_UINT8_T, target, (MPI_Aint)addr_offset,
+			MPI_MIN,sim->win);
+			break;
+		
+		case xbgas_cas:
+		// remote fetch and and
+			MPI_Compare_and_swap(host_addr, bytes, results, MPI_UINT8_T, target, 
+			(MPI_Aint)addr_offset,sim->win);
+			break;
+		case xbgas_unknown:
+			// Invalid operation type
+			std::cout << "Error: Invalid Remote Atomic Operation " << op << std::endl;
+	}
+
+		MPI_Win_flush(target, sim->win);
+		//MPI_Win_flush(sim->myid, sim->win);
+
+    MPI_Win_unlock_all(sim->win);
+
+#ifdef DEBUG
+		printf("Returned Value = %lu\n", *results);
+#endif
+}
+
 
 
 void mmu_t::store_remote_path(int64_t target, reg_t addr,

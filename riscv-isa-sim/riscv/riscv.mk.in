@@ -282,6 +282,20 @@ riscv_insn_list = \
 	eaddi\
 	eaddie\
 	eaddix\
+	eamoadd_d\
+	eamoadd_w\
+	eamomax_d\
+	eamomax_w\
+	eamomin_d\
+	eamomin_w\
+	eamoand_w\
+	eamoand_d\
+	eamoxor_w\
+	eamoxor_d\
+	eamoor_w\
+	eamoor_d\
+	eamocas_w\
+	eamocas_d\
 
 
 riscv_gen_srcs = \

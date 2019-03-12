@@ -217,7 +217,25 @@ public:
   xbgas_store_func(uint8)
 
 
+      //if (addr & (sizeof(type##_t)-1)) 
+        //throw trap_store_address_misaligned(addr); 
+			//printf("Target = %ld, addr = %lu, bytes = %lu\n", target, addr, val);
+    //template<typename op> 
+  // template for functions that perform an remote atomic memory operation
+	#define xbgas_amo_func(type)\
+    type##_t xbgas_amo_##type(reg_t upper, reg_t addr, type##_t val, std::string operation) { \
+      int64_t target = sim->olb_visit(upper);\
+      if (unlikely(target == -1)){\
+        throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
+      }\
+			type##_t results = 0;\
+			remote_amo(target,addr,sizeof(type##_t), (uint8_t*)&val, operation, (uint8_t*)&results );\
+			return results;\
+		}	
 
+
+	xbgas_amo_func(uint64)
+	xbgas_amo_func(uint32)
 
   // template for functions that perform an atomic memory operation
   #define amo_func(type) \
@@ -300,6 +318,7 @@ public:
   void flush_icache();
   void load_remote_path(int64_t target, reg_t addr, reg_t len, uint8_t* bytes);
   void store_remote_path(int64_t target, reg_t addr, reg_t len, uint8_t* bytes);
+	void remote_amo(int64_t target, reg_t addr, reg_t len, uint8_t* bytes, std::string op, uint8_t* results);
   void register_memtracer(memtracer_t*);
   // xbgas extensions
   bool set_xbgas();
