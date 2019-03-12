@@ -686,7 +686,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"dret",      "I",   "",     MATCH_DRET, MASK_DRET, match_opcode, 0 },
 {"sfence.vm", "I",   "",     MATCH_SFENCE_VM, MASK_SFENCE_VM | MASK_RS1, match_opcode, 0 },
 {"sfence.vm", "I",   "s",    MATCH_SFENCE_VM, MASK_SFENCE_VM, match_opcode, 0 },
-{"sfence.vma","I",   "",     MATCH_SFENCE_VMA, MASK_SFENCE_VMA | MASK_RS1 | MASK_RS2, match_opcode, INSN_ALIAS },
+{"sfence.","I",   "",     MATCH_SFENCE_VMA, MASK_SFENCE_VMA | MASK_RS1 | MASK_RS2, match_opcode, INSN_ALIAS },
 {"sfence.vma","I",   "s",    MATCH_SFENCE_VMA, MASK_SFENCE_VMA | MASK_RS2, match_opcode, INSN_ALIAS },
 {"sfence.vma","I",   "s,t",  MATCH_SFENCE_VMA, MASK_SFENCE_VMA, match_opcode, 0 },
 {"wfi",       "I",   "",     MATCH_WFI, MASK_WFI, match_opcode, 0 },
@@ -727,6 +727,22 @@ const struct riscv_opcode riscv_opcodes[] =
 {"eaddi",     "64I", "d,o,y",  MATCH_EADDI, MASK_EADDI, match_opcode, 0 }, /* d,o(y) */
 {"eaddie",    "64I", "L,o,s",  MATCH_EADDIE,MASK_EADDIE,match_opcode, 0 }, /* L,o(s) */
 {"eaddix",    "64I", "L,o,y",  MATCH_EADDIX,MASK_EADDIX,match_opcode, 0 }, /* L,o(y) */
+
+{"eamoadd.w",   "64I", "d,t,s",  MATCH_EAMOADD_W,  MASK_EAMOADD_W,  match_opcode, 0 },
+{"eamoxor.w",   "64I", "d,t,s",  MATCH_EAMOXOR_W,  MASK_EAMOXOR_W,  match_opcode, 0 },
+{"eamoand.w",   "64I", "d,t,s",  MATCH_EAMOAND_W,  MASK_EAMOAND_W,  match_opcode, 0 },
+{"eamoor.w",    "64I", "d,t,s",  MATCH_EAMOOR_W,   MASK_EAMOOR_W,   match_opcode, 0 },
+{"eamomin.w",   "64I", "d,t,s",  MATCH_EAMOMIN_W,  MASK_EAMOMIN_W,  match_opcode, 0 },
+{"eamomax.w",   "64I", "d,t,s",  MATCH_EAMOMAX_W,  MASK_EAMOMAX_W,  match_opcode, 0 },
+{"eamocas.w",   "64I", "d,t,s",  MATCH_EAMOCAS_W,  MASK_EAMOCAS_W,  match_opcode, 0 },
+
+{"eamoadd.d",   "64I", "d,t,s",  MATCH_EAMOADD_D,  MASK_EAMOADD_D,  match_opcode, 0 },
+{"eamoxor.d",   "64I", "d,t,s",  MATCH_EAMOXOR_W,  MASK_EAMOXOR_W,  match_opcode, 0 },
+{"eamoand.d",   "64I", "d,t,s",  MATCH_EAMOAND_W,  MASK_EAMOAND_W,  match_opcode, 0 },
+{"eamoor.d",    "64I", "d,t,s",  MATCH_EAMOOR_W,   MASK_EAMOOR_W,   match_opcode, 0 },
+{"eamomin.d",   "64I", "d,t,s",  MATCH_EAMOMIN_D,  MASK_EAMOMIN_D,  match_opcode, 0 },
+{"eamomax.d",   "64I", "d,t,s",  MATCH_EAMOMAX_D,  MASK_EAMOMAX_D,  match_opcode, 0 },
+{"eamocas.d",   "64I", "d,t,s",  MATCH_EAMOCAS_W,  MASK_EAMOCAS_W,  match_opcode, 0 },
 
 /* Terminate the list.  */
 {0, 0, 0, 0, 0, 0, 0}
