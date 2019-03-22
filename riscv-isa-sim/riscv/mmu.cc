@@ -125,7 +125,6 @@ reg_t reg_from_bytes(size_t len, const uint8_t* bytes)
 
 void mmu_t::remote_amo(int64_t target, reg_t addr, reg_t len, uint8_t* bytes, std::string op, uint8_t* results)
 {
-
 	reg_t paddr = translate(addr, LOAD);
 	auto host_addr = sim->addr_to_mem(paddr);
 	uint64_t addr_offset = host_addr - (sim->mems[0].second->contents());
@@ -139,41 +138,72 @@ void mmu_t::remote_amo(int64_t target, reg_t addr, reg_t len, uint8_t* bytes, st
 	{
 		case xbgas_add:
 		// remote fetch and add
-			MPI_Fetch_and_op(bytes, results, MPI_UINT8_T, target, (MPI_Aint)addr_offset,
-			MPI_SUM,sim->win);
+		  if(len == 4)	
+				MPI_Fetch_and_op(bytes, results, MPI_UINT32_T, target, (MPI_Aint)addr_offset,
+				MPI_SUM,sim->win);
+			else
+				MPI_Fetch_and_op(bytes, results, MPI_UINT64_T, target, (MPI_Aint)addr_offset,
+				MPI_SUM,sim->win);
 			break;
 		case xbgas_and:
 		// remote fetch and and
-			MPI_Fetch_and_op(bytes, results, MPI_UINT8_T, target, (MPI_Aint)addr_offset,
-			MPI_LAND,sim->win);
+			if(len == 4)
+				MPI_Fetch_and_op(bytes, results, MPI_UINT32_T, target, (MPI_Aint)addr_offset,
+			 	MPI_LAND,sim->win);
+			else
+			 	MPI_Fetch_and_op(bytes, results, MPI_UINT64_T, target, (MPI_Aint)addr_offset,
+			 	MPI_LAND,sim->win);
 			break;
 		case xbgas_xor:
 		// remote fetch and and
-			MPI_Fetch_and_op(bytes, results, MPI_UINT8_T, target, (MPI_Aint)addr_offset,
-			MPI_LXOR,sim->win);
+			if(len == 4)
+				MPI_Fetch_and_op(bytes, results, MPI_UINT32_T, target, (MPI_Aint)addr_offset,
+				MPI_LXOR,sim->win);
+			else
+				MPI_Fetch_and_op(bytes, results, MPI_UINT64_T, target, (MPI_Aint)addr_offset,
+				MPI_LXOR,sim->win);
+
 			break;
 		case xbgas_or:
+			if( len ==4 )
 		// remote fetch and and
-			MPI_Fetch_and_op(bytes, results, MPI_UINT8_T, target, (MPI_Aint)addr_offset,
-			MPI_LOR,sim->win);
+				MPI_Fetch_and_op(bytes, results, MPI_UINT32_T, target, (MPI_Aint)addr_offset,
+				MPI_LOR,sim->win);
+			else
+				MPI_Fetch_and_op(bytes, results, MPI_UINT64_T, target, (MPI_Aint)addr_offset,
+				MPI_LOR,sim->win);
 			break;
 			
 		case xbgas_max:
 		// remote fetch and max
-			MPI_Fetch_and_op(bytes, results, MPI_UINT8_T, target, (MPI_Aint)addr_offset,
-			MPI_MAX,sim->win);
+			if(len == 4)
+				MPI_Fetch_and_op(bytes, results, MPI_UINT32_T, target, (MPI_Aint)addr_offset,
+				MPI_MAX,sim->win);
+			else
+				MPI_Fetch_and_op(bytes, results, MPI_UINT64_T, target, (MPI_Aint)addr_offset,
+				MPI_MAX,sim->win);
+
 			break;
 		
 		case xbgas_min:
 		// remote fetch and min
-			MPI_Fetch_and_op(bytes, results, MPI_UINT8_T, target, (MPI_Aint)addr_offset,
-			MPI_MIN,sim->win);
+			if( len == 4 )
+				MPI_Fetch_and_op(bytes, results, MPI_UINT32_T, target, (MPI_Aint)addr_offset,
+				MPI_MIN,sim->win);
+			else
+				MPI_Fetch_and_op(bytes, results, MPI_UINT64_T, target, (MPI_Aint)addr_offset,
+				MPI_MIN,sim->win);
 			break;
 		
 		case xbgas_cas:
 		// remote fetch and and
-			MPI_Compare_and_swap(host_addr, bytes, results, MPI_UINT8_T, target, 
-			(MPI_Aint)addr_offset,sim->win);
+			if( len == 4)
+				MPI_Compare_and_swap(host_addr, bytes, results, MPI_UINT32_T, target, 
+				(MPI_Aint)addr_offset,sim->win);
+			else
+				MPI_Compare_and_swap(host_addr, bytes, results, MPI_UINT64_T, target, 
+				(MPI_Aint)addr_offset,sim->win);
+
 			break;
 		case xbgas_unknown:
 			// Invalid operation type
