@@ -737,12 +737,12 @@ const struct riscv_opcode riscv_opcodes[] =
 {"eamocas.w",   "64I", "d,t,s",  MATCH_EAMOCAS_W,  MASK_EAMOCAS_W,  match_opcode, 0 },
 
 {"eamoadd.d",   "64I", "d,t,s",  MATCH_EAMOADD_D,  MASK_EAMOADD_D,  match_opcode, 0 },
-{"eamoxor.d",   "64I", "d,t,s",  MATCH_EAMOXOR_W,  MASK_EAMOXOR_W,  match_opcode, 0 },
-{"eamoand.d",   "64I", "d,t,s",  MATCH_EAMOAND_W,  MASK_EAMOAND_W,  match_opcode, 0 },
-{"eamoor.d",    "64I", "d,t,s",  MATCH_EAMOOR_W,   MASK_EAMOOR_W,   match_opcode, 0 },
+{"eamoxor.d",   "64I", "d,t,s",  MATCH_EAMOXOR_D,  MASK_EAMOXOR_D,  match_opcode, 0 },
+{"eamoand.d",   "64I", "d,t,s",  MATCH_EAMOAND_D,  MASK_EAMOAND_D,  match_opcode, 0 },
+{"eamoor.d",    "64I", "d,t,s",  MATCH_EAMOOR_D,   MASK_EAMOOR_D,   match_opcode, 0 },
 {"eamomin.d",   "64I", "d,t,s",  MATCH_EAMOMIN_D,  MASK_EAMOMIN_D,  match_opcode, 0 },
 {"eamomax.d",   "64I", "d,t,s",  MATCH_EAMOMAX_D,  MASK_EAMOMAX_D,  match_opcode, 0 },
-{"eamocas.d",   "64I", "d,t,s",  MATCH_EAMOCAS_W,  MASK_EAMOCAS_W,  match_opcode, 0 },
+{"eamocas.d",   "64I", "d,t,s",  MATCH_EAMOCAS_D,  MASK_EAMOCAS_D,  match_opcode, 0 },
 
 /* Terminate the list.  */
 {0, 0, 0, 0, 0, 0, 0}
