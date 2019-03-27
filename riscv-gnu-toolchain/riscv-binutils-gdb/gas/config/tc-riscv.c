@@ -34,7 +34,6 @@
 #include "opcode/riscv.h"
 
 #include <stdint.h>
-
 /* Information about an instruction, including its format, operands
    and fixups.  */
 struct riscv_cl_insn
@@ -499,6 +498,9 @@ validate_riscv_insn (const struct riscv_opcode *opc)
   int insn_width = 8 * riscv_insn_length (opc->match);
   insn_t required_bits = ~0ULL >> (64 - insn_width);
 
+			//printf ( "required bits = %lx\n", required_bits);
+			//printf ( "mask = %lx\n", opc->mask);
+			//printf ( "match = %lx\n", opc->match);
   if ((used_bits & opc->match) != (opc->match & required_bits))
     {
       as_bad (_("internal: bad RISC-V opcode (mask error): %s %s"),
