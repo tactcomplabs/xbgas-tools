@@ -125,6 +125,7 @@ reg_t reg_from_bytes(size_t len, const uint8_t* bytes)
 
 void mmu_t::remote_amo(int64_t target, reg_t addr, reg_t len, uint8_t* bytes, std::string op, uint8_t* results)
 {
+	//std::cout << "start the remote amo, operation is "<<op<< ", request size is " << len<< " bytes" << std::endl;
 	reg_t paddr = translate(addr, LOAD);
 	auto host_addr = sim->addr_to_mem(paddr);
 	uint64_t addr_offset = host_addr - (sim->mems[0].second->contents());
@@ -141,9 +142,10 @@ void mmu_t::remote_amo(int64_t target, reg_t addr, reg_t len, uint8_t* bytes, st
 		  if(len == 4)	
 				MPI_Fetch_and_op(bytes, results, MPI_UINT32_T, target, (MPI_Aint)addr_offset,
 				MPI_SUM,sim->win);
-			else
+			else{
+				printf("get into case eamoadd.d\n");
 				MPI_Fetch_and_op(bytes, results, MPI_UINT64_T, target, (MPI_Aint)addr_offset,
-				MPI_SUM,sim->win);
+				MPI_SUM,sim->win);}
 			break;
 		case xbgas_and:
 		// remote fetch and and
