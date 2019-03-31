@@ -237,6 +237,24 @@ public:
 	xbgas_amo_func(uint64)
 	xbgas_amo_func(uint32)
 
+
+	#define xbgas_cas_func(type)\
+    type##_t xbgas_cas_##type(reg_t upper, reg_t addr, type##_t val, std::string operation, reg_t results) { \
+      int64_t target = sim->olb_visit(upper);\
+      if (unlikely(target == -1)){\
+        throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
+      }\
+			remote_amo(target,addr,sizeof(type##_t), (uint8_t*)&val, operation, (uint8_t*)results );\
+			return results;\
+		}	
+	xbgas_cas_func(uint64)
+	xbgas_cas_func(uint32)
+
+
+
+
+
+
   // template for functions that perform an atomic memory operation
   #define amo_func(type) \
     template<typename op> \
