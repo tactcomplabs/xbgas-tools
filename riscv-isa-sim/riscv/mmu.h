@@ -156,12 +156,12 @@ public:
   xbgas_load_func(int8)
 
 
+	//std::cout <<"Rank " << sim->myid << " comletes MPI_Barrier\n";
   // template for functions that store an aligned value to memory
   #define store_func(type) \
     void store_##type(reg_t addr, type##_t val) { \
 			if (addr == 0xBB00000000000000ull || addr == 0xAA00000000000000ull){\
 				MPI_Barrier(MPI_COMM_WORLD);\
-				std::cout <<"Rank " << sim->myid << " comletes MPI_Barrier\n";\
 				return;\
 			}\
       if (unlikely(addr & (sizeof(type##_t)-1))) \

@@ -141,6 +141,8 @@ private:
 #define EXT1 READ_XBREG(insn.rs1())
 #define EXT2 READ_XBREG(insn.rs2())
 #define EXT3 READ_XBREG(insn.rd())
+//#define EXT3 READ_XBREG(insn.rs3())
+//#define EXTD READ_XBREG(insn.rd())
 #define RD READ_REG(insn.rd())
 
 #define READ_FREG(reg) STATE.FPR[reg]
