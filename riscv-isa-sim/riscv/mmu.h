@@ -21,6 +21,13 @@
 #else
 #define PGSHIFT 12
 #endif
+
+
+extern int64_t insn_check;
+extern int64_t check_accum;
+extern int64_t check_buf;
+extern int64_t ic_check;
+
 typedef __int128 int128_t;
 typedef unsigned __int128 uint128_t;
 
@@ -155,6 +162,45 @@ public:
   xbgas_load_func(int16)
   xbgas_load_func(int8)
 
+	void insn_checkpoint_open()
+	{
+		insn_check = 0;	
+		ic_check = 0;
+	}
+	void insn_checkpoint_close()
+	{
+		if(sim->xbgas_enable()){
+	  	//MPI_Reduce(&insn_check, &check_buf, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+			//if(!sim->get_rank())
+				//printf("---SPIKE--- Instruction Checkpoint = %ld\n", insn_check);
+			//if(!sim->get_rank())
+				//printf("---SPIKE--- Instruction Checkpoint = %ld\n", check_buf);
+	  	/*MPI_Reduce(&ic_check, &check_buf, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+			if(!sim->get_rank())
+				printf("---SPIKE--- I-Cache Checkpoint = %ld\n", ic_check);
+			*/	
+			  check_accum+=check_buf;
+				check_buf = 0;
+		}
+		else{
+			printf("---SPIKE--- Thread %d, Instruction Checkpoint = %ld\n", sim->get_rank(), insn_check);
+		}
+		insn_check = 0;	
+		ic_check = 0;
+	}
+
+/*void insn_checkpoint(int64_t val){
+				printf("enter insn check val = %u\n", val);
+				if(val){
+					insn_checkpoint_open();
+				}
+				else{
+					insn_checkpoint_close();
+				}
+				printf("exit insn check\n");
+				return;
+
+}*/
 
 	//std::cout <<"Rank " << sim->myid << " comletes MPI_Barrier\n";
   // template for functions that store an aligned value to memory
@@ -162,6 +208,13 @@ public:
     void store_##type(reg_t addr, type##_t val) { \
 			if (addr == 0xBB00000000000000ull || addr == 0xAA00000000000000ull){\
 				MPI_Barrier(MPI_COMM_WORLD);\
+				return;\
+			}\
+			if (addr == 0xC000000000000000ull){\
+				if(val)\
+					insn_checkpoint_open();\
+				else\
+					insn_checkpoint_close();\
 				return;\
 			}\
       if (unlikely(addr & (sizeof(type##_t)-1))) \
@@ -320,6 +373,8 @@ public:
 
   inline icache_entry_t* access_icache(reg_t addr)
   {
+		//insn_cnt++;
+		ic_check++;
     icache_entry_t* entry = &icache[icache_index(addr)];
     if (likely(entry->tag == addr))
       return entry;
@@ -341,6 +396,9 @@ public:
   // xbgas extensions
   bool set_xbgas();
 
+	void inst_incr(){insn_cnt++;};
+	void print_stat();
+
 private:
   sim_t* sim;
   processor_t* proc;
@@ -348,6 +406,7 @@ private:
   uint16_t fetch_temp;
   // xbgas extensions
   bool xbgas_enable;
+	int64_t insn_cnt = 0;
 
   // implement an instruction cache for simulator performance
   icache_entry_t icache[ICACHE_ENTRIES];

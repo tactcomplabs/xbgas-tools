@@ -44,6 +44,8 @@ public:
   // xbgas extension
   int olb_init();
   int olb_visit(reg_t addr);
+	int get_rank(){return myid;}
+	int xbgas_enable(){return xbgas;}
 
 private:
   std::vector<std::pair<reg_t, mem_t*>> mems;
