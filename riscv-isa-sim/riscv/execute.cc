@@ -4,7 +4,8 @@
 #include "mmu.h"
 #include "sim.h"
 #include <cassert>
-
+int64_t inst = 0;
+int64_t insn_check = 0;
 
 static void commit_log_stash_privilege(state_t* state)
 {
@@ -45,6 +46,8 @@ inline void processor_t::update_histogram(reg_t pc)
 // function calls.
 static reg_t execute_insn(processor_t* p, reg_t pc, insn_fetch_t fetch)
 {
+	inst++;
+	insn_check++;
   commit_log_stash_privilege(p->get_state());
   reg_t npc = fetch.func(p, fetch.insn, pc);
   if (!invalid_pc(npc)) {
@@ -103,6 +106,7 @@ void processor_t::step(size_t n)
           }
 
           insn_fetch_t fetch = mmu->load_insn(pc);
+					mmu->inst_incr();
           if (debug && !state.serialized)
             disasm(fetch.insn);
           pc = execute_insn(this, pc, fetch);

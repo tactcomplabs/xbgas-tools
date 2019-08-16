@@ -14,7 +14,8 @@
 #include <memory>
 #include <mpi.h>
 
-
+extern int64_t insn_check;
+extern int64_t inst;
 //#define DEBUG
 static void help()
 {
@@ -205,9 +206,26 @@ int main(int argc, char** argv)
   s.set_debug(debug);
   s.set_log(log);
   s.set_histogram(histogram);
+	//s.get_core(0)->get_mmu()->print_stat();
   ret = s.run();
 
+	//int64_t check_buf;
+	if(xbgas){
+		int64_t inst_buf;
+		//MPI_Reduce(&insn_check,&check_buf,1,MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+		MPI_Reduce(&inst,&inst_buf,1,MPI_LONG_LONG,MPI_SUM, 0, MPI_COMM_WORLD);
+		if(rank == 0){
+			//printf("Insn Checkpoint = %ld, Total Insn = %ld\n", check_buf, inst_buf);
+			printf("Total Insn = %ld\n", inst_buf);
+			//printf("Check Sum  = %ld\n", check_accum);
+		}
+	}
+	else
+		//printf("Insn Checkpoint = %ld, Total Insn = %ld\n", check_buf, inst_buf);
+		printf("Total Insn = %ld\n", inst);
+
   if(xbgas){
+		printf("PE %d, Check Sum  = %ld\n", rank, check_accum);
     //MPI_Win_detach(win,mems[0].second->contents());
     MPI_Barrier(MPI_COMM_WORLD);
     //MPI_Win_fence(0,win);

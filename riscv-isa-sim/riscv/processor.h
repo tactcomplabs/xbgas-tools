@@ -287,8 +287,9 @@ public:
   }
 
   void trigger_updated();
+	// xBGAS Extension
   bool enable_xbgas();
-
+	uint32_t get_id(){ return id; }
 private:
   sim_t* sim;
   mmu_t* mmu; // main memory is always accessed via the mmu

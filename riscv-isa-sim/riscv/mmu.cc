@@ -8,6 +8,11 @@
 //#define DEBUG
 #undef DEBUG
 
+extern int64_t inst;
+extern int64_t insn_check;
+int64_t check_accum = 0;
+int64_t check_buf = 0;
+int64_t ic_check = 0;
 enum xbgas_amo{
 	xbgas_add,
 	xbgas_xor,
@@ -44,6 +49,10 @@ mmu_t::mmu_t(sim_t* sim, processor_t* proc)
 
 mmu_t::~mmu_t()
 {
+	//print_stat();
+	//if(inst)
+		//std::cout  << "Exec Instruction Cnt = " <<inst << std::endl; 
+	//inst = 0;
 }
 
 // xBGAS Extensions
@@ -51,6 +60,13 @@ bool mmu_t::set_xbgas(){
   xbgas_enable = true;
   return true;
 }
+
+/*void mmu_t::print_stat()
+{
+	//std::cout << "Core "<< proc->get_id() << ", Instruction Cnt = " <<insn_cnt << std::endl; 
+	std::cout  << "Instruction Cnt = " <<insn_cnt << std::endl; 
+
+}*/
 
 
 void mmu_t::flush_icache()
@@ -143,7 +159,6 @@ void mmu_t::remote_amo(int64_t target, reg_t addr, reg_t len, uint8_t* bytes, st
 				MPI_Fetch_and_op(bytes, results, MPI_UINT32_T, target, (MPI_Aint)addr_offset,
 				MPI_SUM,sim->win);
 			else{
-				printf("get into case eamoadd.d\n");
 				MPI_Fetch_and_op(bytes, results, MPI_UINT64_T, target, (MPI_Aint)addr_offset,
 				MPI_SUM,sim->win);}
 			break;
