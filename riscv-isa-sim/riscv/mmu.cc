@@ -143,7 +143,7 @@ void mmu_t::remote_amo(int64_t target, reg_t addr, reg_t len, uint8_t* bytes, st
 				MPI_Fetch_and_op(bytes, results, MPI_UINT32_T, target, (MPI_Aint)addr_offset,
 				MPI_SUM,sim->win);
 			else{
-				printf("get into case eamoadd.d\n");
+				//printf("get into case eamoadd.d\n");
 				MPI_Fetch_and_op(bytes, results, MPI_UINT64_T, target, (MPI_Aint)addr_offset,
 				MPI_SUM,sim->win);}
 			break;
