@@ -28,6 +28,26 @@ extern int64_t check_accum;
 extern int64_t check_buf;
 extern int64_t ic_check;
 
+extern int64_t amo_insn;
+extern int64_t amo_add;
+extern int64_t amo_or ;
+extern int64_t amo_xor;
+extern int64_t amo_max;
+extern int64_t amo_min;
+extern int64_t amo_swap;
+extern int64_t amo_and;
+
+
+extern int64_t		EAG_ne;
+extern int64_t		EAG_addr;
+extern int64_t		EAG_stride;
+extern int64_t		EAG_flag;
+
+
+
+
+
+
 typedef __int128 int128_t;
 typedef unsigned __int128 uint128_t;
 
@@ -95,6 +115,17 @@ public:
     throw trap_store_address_misaligned(addr);
 #endif
   }
+
+	void xbgas_aggregate(reg_t ne, reg_t stride, reg_t addr){
+		EAG_ne			= ne;
+		EAG_addr 		= addr;
+		EAG_stride 	= stride;
+		EAG_flag		= 1;
+
+
+	}
+
+
 
   // template for functions that load an aligned value from memory
   #define load_func(type) \
@@ -268,6 +299,8 @@ public:
   xbgas_store_func(uint32)
   xbgas_store_func(uint16)
   xbgas_store_func(uint8)
+
+
 
 
       //if (addr & (sizeof(type##_t)-1)) 

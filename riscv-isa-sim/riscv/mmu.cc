@@ -8,6 +8,23 @@
 //#define DEBUG
 #undef DEBUG
 
+int64_t amo_insn = 0;
+int64_t amo_add = 0;
+int64_t amo_and = 0;
+int64_t amo_or = 0;
+int64_t amo_xor = 0;
+int64_t amo_max = 0;
+int64_t amo_min = 0;
+int64_t amo_swap = 0;
+
+
+
+int64_t		EAG_ne			= 0;
+int64_t		EAG_addr 		= 0;
+int64_t		EAG_stride 	= 0; // Curently Not Supported due to the MPI Simulation Interface
+int64_t		EAG_flag		= 0;
+
+
 extern int64_t inst;
 extern int64_t insn_check;
 int64_t check_accum = 0;
@@ -252,6 +269,18 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
   // Temporarily go through the MMU address translation
   reg_t paddr = translate(addr, STORE);
   auto host_addr = sim->addr_to_mem(paddr);
+	
+	// Check if aggregation is enabled
+	if(unlikely(EAG_flag)){
+		len 			= EAG_ne;
+		//reset aggregation status
+		EAG_flag 	= 0;
+		EAG_ne	 	= 0;
+	}
+
+	
+
+
 #ifdef DEBUG
   std::cout << "DEBUG:: Thread " << rank << ", Host Addr = 0x"
             << (reg_t)host_addr
@@ -357,6 +386,16 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
             << (reg_t)host_addr - (reg_t)(sim->mems[0].second->contents())
             <<"\n";
 #endif
+
+	// Check if aggregation is enabled
+	if(unlikely(EAG_flag)){
+		len 			= EAG_ne;
+		//reset aggregation status
+		EAG_flag 	= 0;
+		EAG_ne	 	= 0;
+	}
+
+
 
   //MPI_Win_fence(0, sim->win);
   //Target thread

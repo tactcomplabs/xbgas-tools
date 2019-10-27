@@ -282,6 +282,7 @@ riscv_insn_list = \
 	eaddi\
 	eaddie\
 	eaddix\
+	eag\
 	eamoadd_d\
 	eamoadd_w\
 	eamomax_d\
