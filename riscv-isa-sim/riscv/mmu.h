@@ -116,12 +116,12 @@ public:
 #endif
   }
 
-	void xbgas_aggregate(reg_t ne, reg_t stride, reg_t addr){
-		EAG_ne			= ne;
-		EAG_addr 		= addr;
-		EAG_stride 	= stride;
+	int xbgas_aggregate(reg_t ne, reg_t addr){ // stride is currently not supported
+		EAG_ne			= ne;		// number of elements
+		EAG_addr 		= addr;	// destination address for extended load operations, stores won't need it
 		EAG_flag		= 1;
-
+		return 1;
+		//EAG_stride 	= stride;
 
 	}
 

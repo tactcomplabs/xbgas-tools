@@ -271,11 +271,40 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
   auto host_addr = sim->addr_to_mem(paddr);
 	
 	// Check if aggregation is enabled
+	auto src_addr 	= sim->addr_to_mem(translate(EAG_addr, LOAD));
+	uint8_t* buffer = NULL;
 	if(unlikely(EAG_flag)){
-		len 			= EAG_ne;
+		len 					= 	EAG_ne;
 		//reset aggregation status
-		EAG_flag 	= 0;
+		if((reg_t)src_addr + (int64_t)len <= ((reg_t)src_addr|0xfff))
+			bytes 			= 	(uint8_t*)src_addr;
+		else{
+			buffer 			= 	(uint8_t*)malloc(sizeof(uint8_t)*len);
+		 	bytes 			= 	buffer;
+			
+		  int copy_ne = 	((reg_t)src_addr|0xfff) - (reg_t)src_addr;
+			int rest    = 	len - copy_ne;
+			memcpy( buffer, src_addr, copy_ne);	
+			EAG_addr 		+= 	copy_ne;
+			buffer    	+= 	copy_ne;
+
+			while(rest>=4096){
+				src_addr 	= 	sim->addr_to_mem(translate(EAG_addr, LOAD));
+				memcpy(buffer, src_addr, 4096);
+				rest    	= 	rest - 4096;
+				EAG_addr 	+= 	4096;
+				buffer    += 	4096;
+			}
+
+			if(rest > 0){
+				src_addr 	= 	sim->addr_to_mem(translate(EAG_addr, LOAD));
+				memcpy(buffer, src_addr, rest);
+			}
+						
+		}
+		EAG_flag = 0;
 		EAG_ne	 	= 0;
+
 	}
 
 	
@@ -352,6 +381,15 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
     std::cout << "DEBUG:: Thread " << rank << " unlock complete\n";
 
 #endif
+
+		if((reg_t)bytes == (reg_t)src_addr)
+			free(buffer);
+
+
+
+
+
+
     //MPI_Request put_req;
     //MPI_Win_lock_all(0, sim->win);
     //MPI_Rput(bytes, len, MPI_UINT8_T, target,
@@ -387,12 +425,21 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
             <<"\n";
 #endif
 
+	auto dest_addr 	= sim->addr_to_mem(translate(EAG_addr, LOAD));
+	uint8_t* buffer 		= NULL;
 	// Check if aggregation is enabled
 	if(unlikely(EAG_flag)){
-		len 			= EAG_ne;
+		len 					= EAG_ne*len; // aggregated size in bytes
+		// If data is mapped into a single pages
+		if((reg_t)dest_addr + int64_t(len) <= ((reg_t)dest_addr|0xfff))
+			bytes 			= (uint8_t*)dest_addr;
+		else{
+			buffer 			= (uint8_t*)malloc(sizeof(uint8_t)*len);
+		 	bytes 			= buffer;
+		}
 		//reset aggregation status
-		EAG_flag 	= 0;
-		EAG_ne	 	= 0;
+		EAG_flag 			= 0;
+		EAG_ne	 			= 0;
 	}
 
 
@@ -451,6 +498,32 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 #ifdef DEBUG
     std::cout << "DEBUG:: Thread " << rank << " released the lock\n";
 #endif
+	 // If data size is larger than page size, then we need to copy data in each page
+	 if((reg_t)dest_addr + (int64_t)len > ((reg_t)dest_addr|0xfff)){
+		  int copy_ne = 	((reg_t)dest_addr|0xfff) - (reg_t)dest_addr;
+			int rest    = 	len - copy_ne;
+			memcpy(dest_addr, buffer, copy_ne);	
+			EAG_addr 		+= 	copy_ne;
+			buffer    	+= 	copy_ne;
+
+			while(rest>=4096){
+				dest_addr = 	sim->addr_to_mem(translate(EAG_addr, LOAD));
+				memcpy(dest_addr,buffer, 4096);
+				rest    	= 	rest - 4096;
+				EAG_addr 	+= 	4096;
+				buffer    += 	4096;
+			}
+
+			if(rest > 0){
+				dest_addr = 	sim->addr_to_mem(translate(EAG_addr, LOAD));
+				memcpy(dest_addr, buffer, rest);
+			}
+						
+			EAG_addr 		= 	0;
+			free(buffer);
+	 }
+
+
 
     //MPI_Request get_req;
     //MPI_Win_lock_all(0, sim->win);
