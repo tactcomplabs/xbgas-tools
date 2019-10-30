@@ -117,6 +117,9 @@ public:
   }
 
 	int xbgas_aggregate(reg_t ne, reg_t addr){ // stride is currently not supported
+#ifdef DEBUG
+		std::cout <<"EAG_ne = "<< EAG_ne <<", ne = " <<  ne << "\n";
+#endif
 		EAG_ne			= ne;		// number of elements
 		EAG_addr 		= addr;	// destination address for extended load operations, stores won't need it
 		EAG_flag		= 1;
@@ -279,11 +282,11 @@ public:
   //std::cout << " value = " << val << std::endl;
   //upper = 1;
   // template for functions that store an aligned value to memory
+      //if(!upper){
+      //  return store_##type(addr, val);
+      //}
   #define xbgas_store_func(type) \
     void xbgas_store_##type(reg_t upper, reg_t addr, type##_t val) { \
-      if(!upper){\
-        return store_##type(addr, val);\
-      }\
       int64_t target = sim->olb_visit(upper);\
       if (unlikely(target == -1)){\
         throw std::runtime_error("The extended address:" + std::to_string(upper) + "does not match any remote node");\
