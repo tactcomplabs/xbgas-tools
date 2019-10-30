@@ -493,15 +493,15 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 	auto 			dest_addr 	= sim->addr_to_mem(translate(EAG_addr, LOAD));
 	uint8_t* 	buffer 			= NULL;
 	uint8_t* 	buf_p 			= NULL;
-	int64_t   EAG_addr_copy = EAG_addr;
+	//int64_t   EAG_addr_copy = EAG_addr;
 	reg_t			copy_ne			= 0;
 	reg_t			rest 				= 0;
 	// Check if aggregation is enabled
 	if(unlikely(EAG_flag)){
 		len 					= EAG_ne*len; // aggregated size in bytes
-		std::cout<< "Thread " << rank << ", LEN = "<< len << ", EAG_ne = " << EAG_ne <<"\n";
 		buffer 			= (uint8_t*)malloc(sizeof(uint8_t)*len);
 #ifdef DEBUG
+		std::cout<< "Thread " << rank << ", LEN = "<< len << ", EAG_ne = " << EAG_ne <<"\n";
   		std::cout << "Thread " << rank << " allocate the buffer for aggregation with size  "
             << len
             <<"\n";
@@ -546,7 +546,8 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 //#if 0
 
 		if(unlikely(EAG_flag)){
-		 	copy_ne = 	((reg_t)host_addr|0xfff) - (reg_t)host_addr + 1;
+		 	//copy_ne = 	((reg_t)host_addr|0xfff) - (reg_t)host_addr + 1;
+		 	copy_ne = 	((reg_t)addr|0xfff) - (reg_t)addr + 1;
 
 			if(copy_ne > len)
 				copy_ne = len;
@@ -555,7 +556,6 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
     	MPI_Get(buffer, copy_ne, MPI_UINT8_T, target,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
             copy_ne, MPI_UINT8_T, sim->win);
-			//EAG_addr 		+= 	copy_ne;
 			buffer    	+= 	copy_ne;
 			addr 				+= 	copy_ne;
 
@@ -566,7 +566,6 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
             4096, MPI_UINT8_T, sim->win);
 				rest    	= 	rest - 4096;
-				//EAG_addr 	+= 	4096;
 				buffer    += 	4096;
 				addr    	+= 	4096;
 			}
@@ -611,11 +610,12 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 	 // If data size is larger than page size, then we need to copy data in each page
 	 //if((reg_t)dest_addr + (int64_t)len > ((reg_t)dest_addr|0xfff)){
 		if(unlikely(EAG_flag)){
-		  copy_ne = 	((reg_t)dest_addr|0xfff) - (reg_t)dest_addr;
+		  //copy_ne = 	((reg_t)dest_addr|0xfff) - (reg_t)dest_addr;
+		  copy_ne = 	((reg_t)EAG_addr|0xfff) - (reg_t)EAG_addr;
 			if(copy_ne > len)
 				copy_ne = len;
 		  rest		    = 	len - copy_ne;
-			EAG_addr		= 	EAG_addr_copy;
+			//EAG_addr		= 	EAG_addr_copy;
 			buffer			=   buf_p;
 			memcpy(dest_addr, buffer, copy_ne);	
 			EAG_addr 		+= 	copy_ne;
