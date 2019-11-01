@@ -724,9 +724,9 @@ const struct riscv_opcode riscv_opcodes[] =
 {"erle",      "64I", "L,s,Y",   MATCH_ERLE, MASK_ERLE, match_opcode, 0 }, /* L,s,Y */
 {"erse",      "64I", "L,s,Y",   MATCH_ERSE, MASK_ERSE, match_opcode, 0 }, /* L,t,Y */
 
-{"eaddi",     "64I", "d,o,y",  MATCH_EADDI, MASK_EADDI, match_opcode, 0 }, /* d,o(y) */
-{"eaddie",    "64I", "L,o,s",  MATCH_EADDIE,MASK_EADDIE,match_opcode, 0 }, /* L,o(s) */
-{"eaddix",    "64I", "L,o,y",  MATCH_EADDIX,MASK_EADDIX,match_opcode, 0 }, /* L,o(y) */
+{"eaddi",     "64I", "d,y,o",  MATCH_EADDI, MASK_EADDI, match_opcode, 0 }, /* d,y,o */
+{"eaddie",    "64I", "L,s,o",  MATCH_EADDIE,MASK_EADDIE,match_opcode, 0 }, /* L,s,o */
+{"eaddix",    "64I", "L,y,o",  MATCH_EADDIX,MASK_EADDIX,match_opcode, 0 }, /* L,y,o */
 
 {"eag",       "64I", "d,s,t",  MATCH_EAG, MASK_EAG, match_opcode, 0 }, /* d,s,t */
 
