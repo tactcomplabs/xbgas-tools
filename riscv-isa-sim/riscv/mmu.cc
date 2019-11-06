@@ -270,13 +270,16 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
   reg_t paddr = translate(addr, STORE);
   auto host_addr = sim->addr_to_mem(paddr);
 	
+  		//std::cout << "Thread " << rank << " complete the address translation\n";
 	// Check if aggregation is enabled
-	auto src_addr 	= sim->addr_to_mem(translate(EAG_addr, LOAD));
+	auto src_addr 	= host_addr;
 	uint8_t* buffer = NULL;
 	uint8_t* buf_p 	= NULL;
 	reg_t rest				= 0;
 	reg_t copy_ne			= 0;	
 	if(unlikely(EAG_flag)){
+
+		src_addr 	= sim->addr_to_mem(translate(EAG_addr, LOAD));
 		len 					= 	EAG_ne*len;
 		// Copy the data from one or multiple pages into the buffer	
 		//if((reg_t)src_addr + (int64_t)len <= ((reg_t)src_addr|0xfff))
@@ -490,7 +493,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
             <<"\n";
 #endif
 
-	auto 			dest_addr 	= sim->addr_to_mem(translate(EAG_addr, LOAD));
+	auto 			dest_addr 	= host_addr;
 	uint8_t* 	buffer 			= NULL;
 	uint8_t* 	buf_p 			= NULL;
 	//int64_t   EAG_addr_copy = EAG_addr;
@@ -498,6 +501,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 	reg_t			rest 				= 0;
 	// Check if aggregation is enabled
 	if(unlikely(EAG_flag)){
+		dest_addr 	= sim->addr_to_mem(translate(EAG_addr, LOAD));
 		len 					= EAG_ne*len; // aggregated size in bytes
 		buffer 			= (uint8_t*)malloc(sizeof(uint8_t)*len);
 #ifdef DEBUG
