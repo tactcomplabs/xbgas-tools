@@ -184,29 +184,29 @@ void mmu_t::remote_amo(int64_t target, reg_t addr, reg_t len, uint8_t* bytes, st
 		// remote fetch and and
 			if(len == 4)
 				MPI_Fetch_and_op(bytes, results, MPI_UINT32_T, target, (MPI_Aint)addr_offset,
-			 	MPI_LAND,sim->win);
+			 	MPI_BAND,sim->win);
 			else
 			 	MPI_Fetch_and_op(bytes, results, MPI_UINT64_T, target, (MPI_Aint)addr_offset,
-			 	MPI_LAND,sim->win);
+			 	MPI_BAND,sim->win);
 			break;
 		case xbgas_xor:
 		// remote fetch and and
 			if(len == 4)
 				MPI_Fetch_and_op(bytes, results, MPI_UINT32_T, target, (MPI_Aint)addr_offset,
-				MPI_LXOR,sim->win);
+				MPI_BXOR,sim->win);
 			else
 				MPI_Fetch_and_op(bytes, results, MPI_UINT64_T, target, (MPI_Aint)addr_offset,
-				MPI_LXOR,sim->win);
+				MPI_BXOR,sim->win);
 
 			break;
 		case xbgas_or:
 			if( len ==4 )
 		// remote fetch and and
 				MPI_Fetch_and_op(bytes, results, MPI_UINT32_T, target, (MPI_Aint)addr_offset,
-				MPI_LOR,sim->win);
+				MPI_BOR,sim->win);
 			else
 				MPI_Fetch_and_op(bytes, results, MPI_UINT64_T, target, (MPI_Aint)addr_offset,
-				MPI_LOR,sim->win);
+				MPI_BOR,sim->win);
 			break;
 			
 		case xbgas_max:
