@@ -105,7 +105,7 @@ reg_t mmu_t::translate(reg_t addr, access_type type)
 {
   if (!proc)
     return addr;
-
+	//std::cout << "DEBUG:: Entering translate() function\n";
   reg_t mode = proc->state.prv;
   if (type != FETCH) {
     if (!proc->state.dcsr.cause && get_field(proc->state.mstatus, MSTATUS_MPRV))
@@ -280,7 +280,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 	reg_t copy_ne			= 0;	
 	if(unlikely(EAG_flag)){
 
-		src_addr 	= sim->addr_to_mem(translate(EAG_addr, LOAD));
+		src_addr 	= sim->addr_to_mem(translate(EAG_addr, STORE));
 		len 					= 	EAG_ne*len;
 		// Copy the data from one or multiple pages into the buffer	
 		//if((reg_t)src_addr + (int64_t)len <= ((reg_t)src_addr|0xfff))
@@ -289,35 +289,57 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 			buffer 			= 	(uint8_t*)malloc(sizeof(uint8_t)*len);
 			buf_p				=		buffer;
 		 	//bytes 			= 	buffer;
+			std::cout << "DEBUG::  Thread " << rank << ", Aggregation Stores\n";
 			if(!buffer)
 				std::cout << "allocation failed\n";
-#ifdef DEBUG
+  		//std::cout << "Thread " << rank << " allocate the buffer for aggregation with size  "
+        //    << sizeof(uint8_t)*len
+          //  <<"\n";
+//#ifdef DEBUG
   		std::cout << "Thread " << rank << " allocate the buffer for aggregation with size  "
             << sizeof(uint8_t)*len
             <<"\n";
-#endif			
+//#endif			
+			std::cout<< "DEBUG::  Thread " << rank << " Buffer Address Range [0x"
+			         << std::hex << (reg_t)buffer << " ~ 0x" << (reg_t)(&buffer[len-1])<< "]\n";
 		  //copy_ne = 	((reg_t)src_addr|0xfff) - (reg_t)src_addr + 1;
 		  copy_ne = 	((reg_t)EAG_addr|0xfff) - (reg_t)EAG_addr + 1;
 			if(copy_ne > len)
 				copy_ne = len;
 			rest    = 	len - copy_ne;
+			std::cout << "DEBUG::  Thread " << rank << " starting the first memcpy\n";
+			std::cout << "DEBUG::  Thread  "
+				          << rank << " EAG_addr = 0x" <<std::hex << EAG_addr << ", src_addr = 0x"
+			            << (reg_t)src_addr << ", buffer_addr = 0x" << (reg_t)buffer<<std::endl;
 			memcpy( buffer, src_addr, copy_ne);	
+			std::cout << "DEBUG::  Thread " << rank << " completing the first memcpy\n";
 			EAG_addr 		+= 	copy_ne;
 			buffer    	+= 	copy_ne;
 
 			while(rest>=4096){
-				src_addr 	= 	sim->addr_to_mem(translate(EAG_addr, LOAD));
+				std::cout << "DEBUG::  Thread "<< rank << " translating address \n";
+				src_addr 	= 	sim->addr_to_mem(translate(EAG_addr, STORE));
+				std::cout << "DEBUG::  Thread "<< rank << " translation completes \n";
+				std::cout << "DEBUG::  Thread  "
+				          << rank << " EAG_addr = 0x" <<std::hex << EAG_addr << ", src_addr = 0x"
+			            << (reg_t)src_addr << ", buffer_addr = 0x" << (reg_t)buffer<<std::endl;
+
+				std::cout << "DEBUG::  Thread " << rank << " starting the memcpy in loop\n";
 				memcpy(buffer, src_addr, 4096);
+				std::cout << "DEBUG::  Thread " << rank << " completing the memcpy in loop\n";
 				rest    	= 	rest - 4096;
 				EAG_addr 	+= 	4096;
 				buffer    += 	4096;
+				std::cout << "DEBUG::  Thread " << rank << " rest = " <<std::dec<< rest <<"\n";
 			}
 
+
 			if(rest > 0){
-				src_addr 	= 	sim->addr_to_mem(translate(EAG_addr, LOAD));
+				src_addr 	= 	sim->addr_to_mem(translate(EAG_addr, STORE));
 				memcpy(buffer, src_addr, rest);
 			}
 						
+			std::cout << "DEBUG::  Thread " << rank << " aggreated store completes local memcpy\n ";
 		//}
 
 	}
@@ -373,7 +395,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 				printf( "\033[1m\033[31m SPIKE: MPI_PUT FAILED\n \x1B[0m");
 
 #ifdef DEBUG
-			std::cout << "DEBUG:: Thread " << rank <<" First Put completes, addr = " <<std::hex<< (reg_t)addr<< "\n";
+			std::cout << "DEBUG:: Thread " << rank <<" Aggregated First Put completes, addr = " <<std::hex<< (reg_t)addr<< "\n";
 #endif
 			//std::cout << "copy_ne = " << copy_ne << "\n";
 			//std::cout << "addr_ne = " << ((reg_t)addr|0xfff) - (reg_t)addr + 1 << "\n";
@@ -439,7 +461,6 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
     std::cout << "DEBUG:: Thread " << rank << " Put complete; unlocking\n";
 #endif
     //MPI_Win_unlock(target, sim->win);
-    MPI_Win_unlock_all(sim->win);
 #ifdef DEBUG
 		std::cout << "DEBUG:: Thread " << rank << " address offset = "<< std::hex << addr_offset <<std::endl;
     std::cout << "DEBUG:: Thread " << rank << " remote value = " <<std::hex<< (uint64_t)(buf)
@@ -456,6 +477,8 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 			free(buf_p);
 		}
 
+    MPI_Win_unlock_all(sim->win);
+		//std::cout << "DEBUG:: Thread " << rank << " REMOTE STORE COMPLETES\n";
 
 
 
@@ -505,6 +528,10 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 		dest_addr 	= sim->addr_to_mem(translate(EAG_addr, LOAD));
 		len 					= EAG_ne*len; // aggregated size in bytes
 		buffer 			= (uint8_t*)malloc(sizeof(uint8_t)*len);
+		std::cout<< "Thread " << rank << ", LEN = "<< len << ", EAG_ne = " << EAG_ne <<"\n";
+  		std::cout << "Thread " << rank << " allocate the buffer for aggregation with size  "
+            << len
+            <<"\n";
 #ifdef DEBUG
 		std::cout<< "Thread " << rank << ", LEN = "<< len << ", EAG_ne = " << EAG_ne <<"\n";
   		std::cout << "Thread " << rank << " allocate the buffer for aggregation with size  "
@@ -756,9 +783,12 @@ tlb_entry_t mmu_t::refill_tlb(reg_t vaddr, reg_t paddr, char* host_addr, access_
 
 reg_t mmu_t::walk(reg_t addr, access_type type, reg_t mode)
 {
+	//std::cout << "DEBUG:: Entering walk() function\n";
   vm_info vm = decode_vm_info(proc->max_xlen, mode, proc->get_state()->sptbr);
-  if (vm.levels == 0)
+  if (vm.levels == 0){
+	//	std::cout << "DEBUG:: vm.levels = 0, leaving walk() function\n";
     return addr & ((reg_t(2) << (proc->xlen-1))-1); // zero-extend from xlen
+	}
 
   bool s_mode = mode == PRV_S;
   bool sum = get_field(proc->state.mstatus, MSTATUS_SUM);
@@ -830,6 +860,8 @@ reg_t mmu_t::walk(reg_t addr, access_type type, reg_t mode)
 //#ifdef DEBUG
 //      std::cout << "Final output address is " << std::hex << value << std::endl; 
 //#endif       
+
+		  //std::cout << "DEBUG::leaving walk() function\n";
       return value; // base addr of the mapped phsycial page
     }
   }
