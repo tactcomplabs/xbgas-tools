@@ -297,7 +297,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
           //  <<"\n";
 //#ifdef DEBUG
   		std::cout << "Thread " << rank << " allocate the buffer for aggregation with size  "
-            << sizeof(uint8_t)*len
+            << std::dec<< sizeof(uint8_t)*len
             <<"\n";
 //#endif			
 			std::cout<< "DEBUG::  Thread " << rank << " Buffer Address Range [0x"
