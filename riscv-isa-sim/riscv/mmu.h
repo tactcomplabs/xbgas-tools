@@ -117,12 +117,19 @@ public:
   }
 
 	int xbgas_aggregate(reg_t ne, reg_t addr){ // stride is currently not supported
+
 #ifdef DEBUG
+		std::cout << "Entering xbgas_aggregate" << "\n";
 		std::cout <<"EAG_ne = "<< EAG_ne <<", ne = " <<  ne << "\n";
 #endif
 		EAG_ne			= ne;		// number of elements
 		EAG_addr 		= addr;	// destination address for extended load operations, stores won't need it
 		EAG_flag		= 1;
+#ifdef DEBUG
+		std::cout << "Leaving xbgas_aggregate" << "\n";
+#endif
+
+
 		return 1;
 		//EAG_stride 	= stride;
 
@@ -203,22 +210,23 @@ public:
 	}
 	void insn_checkpoint_close()
 	{
-		if(sim->xbgas_enable()){
-	  	//MPI_Reduce(&insn_check, &check_buf, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
-			//if(!sim->get_rank())
-				//printf("---SPIKE--- Instruction Checkpoint = %ld\n", insn_check);
-			//if(!sim->get_rank())
-				//printf("---SPIKE--- Instruction Checkpoint = %ld\n", check_buf);
-	  	/*MPI_Reduce(&ic_check, &check_buf, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+		/*if(sim->xbgas_enable()){
+	  	MPI_Reduce(&insn_check, &check_buf, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+			if(!sim->get_rank())
+				printf("---SPIKE--- Instruction Checkpoint = %ld\n", insn_check);
+			if(!sim->get_rank())
+				printf("---SPIKE--- Instruction Checkpoint = %ld\n", check_buf);
+	  	MPI_Reduce(&ic_check, &check_buf, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
 			if(!sim->get_rank())
 				printf("---SPIKE--- I-Cache Checkpoint = %ld\n", ic_check);
-			*/	
+				
 			  check_accum+=check_buf;
 				check_buf = 0;
 		}
 		else{
 			printf("---SPIKE--- Thread %d, Instruction Checkpoint = %ld\n", sim->get_rank(), insn_check);
 		}
+		*/
 		insn_check = 0;	
 		ic_check = 0;
 	}

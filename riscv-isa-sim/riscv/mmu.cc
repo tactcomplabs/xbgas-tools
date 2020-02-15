@@ -848,3 +848,5 @@ void mmu_t::register_memtracer(memtracer_t* t)
   flush_tlb();
   tracer.hook(t);
 }
+
+#undef DEBUG
