@@ -23,6 +23,7 @@ int64_t		EAG_ne			= 0;
 int64_t		EAG_addr 		= 0;
 int64_t		EAG_stride 	= 0; // Curently Not Supported due to the MPI Simulation Interface
 int64_t		EAG_flag		= 0;
+int64_t		EAG_debug		= 0;
 
 
 extern int64_t inst;
@@ -120,8 +121,14 @@ tlb_entry_t mmu_t::fetch_slow_path(reg_t vaddr)
   reg_t paddr = translate(vaddr, FETCH);
   // host_addr is the real address (va) in the allocted memory 
   if (auto host_addr = sim->addr_to_mem(paddr)) {
+		if(EAG_debug)
+			std::cout << "DEBUG:: Thread " <<sim->myid <<", insn_vaddr = "<<std::hex
+			<<vaddr<< ", address translation succeeded\n";
     return refill_tlb(vaddr, paddr, host_addr, FETCH);
   } else {
+		if(EAG_debug)
+			std::cout << "DEBUG:: Thread " <<sim->myid <<", insn_vaddr = "<<std::hex
+			<<vaddr<< ", address translation failed\n";
     if (!sim->mmio_load(paddr, sizeof fetch_temp, (uint8_t*)&fetch_temp))
       throw trap_instruction_access_fault(vaddr);
     tlb_entry_t entry = {(char*)&fetch_temp - vaddr, paddr - vaddr};
@@ -268,7 +275,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 #endif
   int rank	=	sim->myid;
   // Temporarily go through the MMU address translation
-  reg_t paddr = translate(addr, STORE);
+  reg_t paddr = translate(addr, LOAD);
   auto host_addr = sim->addr_to_mem(paddr);
 	
   		//std::cout << "Thread " << rank << " complete the address translation\n";
@@ -280,7 +287,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 	reg_t copy_ne			= 0;	
 	if(unlikely(EAG_flag)){
 
-		src_addr 	= sim->addr_to_mem(translate(EAG_addr, STORE));
+		src_addr 	= sim->addr_to_mem(translate(EAG_addr,LOAD));
 		len 					= 	EAG_ne*len;
 		// Copy the data from one or multiple pages into the buffer	
 		//if((reg_t)src_addr + (int64_t)len <= ((reg_t)src_addr|0xfff))
@@ -311,21 +318,26 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 			std::cout << "DEBUG::  Thread  "
 				          << rank << " EAG_addr = 0x" <<std::hex << EAG_addr << ", src_addr = 0x"
 			            << (reg_t)src_addr << ", buffer_addr = 0x" << (reg_t)buffer<<std::endl;
-			memcpy( buffer, src_addr, copy_ne);	
-			std::cout << "DEBUG::  Thread " << rank << " completing the first memcpy\n";
+			memcpy( buffer, src_addr, sizeof(uint8_t)*copy_ne);	
+			//EAG_debug = 1;
+			flush_tlb();
+			std::cout << "DEBUG::  Thread " <<std::dec << rank << " completing the first memcpy, copied ne = "
+								<< copy_ne << ", rest ne = " << rest <<std::endl;
 			EAG_addr 		+= 	copy_ne;
 			buffer    	+= 	copy_ne;
-
+			if(rest>=4096)
+				std::cout << "DEBUG::  Thread "<< rank << " starting the copy in loop \n";
 			while(rest>=4096){
 				std::cout << "DEBUG::  Thread "<< rank << " translating address \n";
-				src_addr 	= 	sim->addr_to_mem(translate(EAG_addr, STORE));
+				src_addr 	= 	sim->addr_to_mem(translate(EAG_addr, LOAD));
 				std::cout << "DEBUG::  Thread "<< rank << " translation completes \n";
 				std::cout << "DEBUG::  Thread  "
 				          << rank << " EAG_addr = 0x" <<std::hex << EAG_addr << ", src_addr = 0x"
 			            << (reg_t)src_addr << ", buffer_addr = 0x" << (reg_t)buffer<<std::endl;
 
 				std::cout << "DEBUG::  Thread " << rank << " starting the memcpy in loop\n";
-				memcpy(buffer, src_addr, 4096);
+				memcpy(buffer, src_addr, sizeof(uint8_t)*4096);
+				flush_tlb();
 				std::cout << "DEBUG::  Thread " << rank << " completing the memcpy in loop\n";
 				rest    	= 	rest - 4096;
 				EAG_addr 	+= 	4096;
@@ -335,11 +347,19 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 
 
 			if(rest > 0){
-				src_addr 	= 	sim->addr_to_mem(translate(EAG_addr, STORE));
+				std::cout << "DEBUG::  LAST COPY - Thread "
+				          << rank << " EAG_addr = 0x" <<std::hex << EAG_addr << ", src_addr = 0x"
+			            << (reg_t)src_addr << ", buffer_addr = 0x" << (reg_t)buffer<<std::endl;
+				std::cout << "DEBUG::  Thread "<< rank << " translating address \n";
+				src_addr 	= 	sim->addr_to_mem(translate(EAG_addr, LOAD));
+				std::cout << "DEBUG::  Thread "<< rank << " translation completes \n";
+				std::cout << "DEBUG::  Thread "<< rank << " starting the last memcopy \n";
 				memcpy(buffer, src_addr, rest);
+				flush_tlb();
+				std::cout << "DEBUG::  Thread "<< rank << " completed the last memcopy \n";
 			}
 						
-			std::cout << "DEBUG::  Thread " << rank << " aggreated store completes local memcpy\n ";
+			std::cout << "DEBUG::  Thread " << rank << " aggregated store completes local memcpy\n ";
 		//}
 
 	}
@@ -406,7 +426,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 
 
 			while(rest>=4096){
-				host_addr = 	sim->addr_to_mem(translate(addr, STORE));
+				host_addr = 	sim->addr_to_mem(translate(addr, LOAD));
 				//std::cout << "DEBUG:: Thread " << rank <<" host address translation completes in looped put\n";
 				rest    	= 	rest - 4096;
    			if(MPI_SUCCESS != MPI_Put((uint8_t*)buffer, 4096, MPI_UINT8_T, target,
@@ -421,7 +441,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 			std::cout << "DEBUG:: Thread " << rank <<" host address translation starts, address is " <<std::hex<<(reg_t)addr<< "\n";
 #endif
 			if(rest > 0){
-				host_addr 	= 	sim->addr_to_mem(translate(addr, STORE));
+				host_addr 	= 	sim->addr_to_mem(translate(addr, LOAD));
    			if(MPI_SUCCESS != MPI_Put((uint8_t*)buffer, rest, MPI_UINT8_T, target,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()), rest, MPI_UINT8_T, sim->win))
 				printf( "\033[1m\033[31m SPIKE: MPI_PUT FAILED\n \x1B[0m");
@@ -525,7 +545,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 	reg_t			rest 				= 0;
 	// Check if aggregation is enabled
 	if(unlikely(EAG_flag)){
-		dest_addr 	= sim->addr_to_mem(translate(EAG_addr, LOAD));
+		dest_addr 	= sim->addr_to_mem(translate(EAG_addr, STORE));
 		len 					= EAG_ne*len; // aggregated size in bytes
 		buffer 			= (uint8_t*)malloc(sizeof(uint8_t)*len);
 		std::cout<< "Thread " << rank << ", LEN = "<< len << ", EAG_ne = " << EAG_ne <<"\n";
@@ -593,7 +613,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 
 			while(rest>=4096){
 				//dest_addr = 	sim->addr_to_mem(translate(EAG_addr, LOAD));
-				host_addr = 	sim->addr_to_mem(translate(addr, LOAD));
+				host_addr = 	sim->addr_to_mem(translate(addr,STORE));
     		MPI_Get(buffer, 4096, MPI_UINT8_T, target,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
             4096, MPI_UINT8_T, sim->win);
@@ -603,7 +623,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 			}
 
 			if(rest > 0){
-				host_addr = 	sim->addr_to_mem(translate(addr, LOAD));
+				host_addr = 	sim->addr_to_mem(translate(addr, STORE));
 				//dest_addr = 	sim->addr_to_mem(translate(EAG_addr, LOAD));
     		MPI_Get(buffer, rest, MPI_UINT8_T, target,
             (MPI_Aint)host_addr - (MPI_Aint)(sim->mems[0].second->contents()),
@@ -634,7 +654,6 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 #endif
     //MPI_Win_unlock(target, sim->win);
     MPI_Win_flush(target,sim->win);
-    MPI_Win_unlock_all(sim->win);
 		//MPI_Win_unlock( target, sim->win);
 #ifdef DEBUG
     std::cout << "DEBUG:: Thread " << rank << " released the lock\n";
@@ -654,7 +673,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 			buffer    	+= 	copy_ne;
 
 			while(rest>=4096){
-				dest_addr = 	sim->addr_to_mem(translate(EAG_addr, LOAD));
+				dest_addr = 	sim->addr_to_mem(translate(EAG_addr, STORE));
 				memcpy(dest_addr,buffer, 4096);
 				rest    	= 	rest - 4096;
 				EAG_addr 	+= 	4096;
@@ -662,7 +681,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 			}
 
 			if(rest > 0){
-				dest_addr = 	sim->addr_to_mem(translate(EAG_addr, LOAD));
+				dest_addr = 	sim->addr_to_mem(translate(EAG_addr, STORE));
 				memcpy(dest_addr, buffer, rest);
 			}
 						
@@ -674,6 +693,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 			EAG_ne	 			= 0;
 	 }
 
+    MPI_Win_unlock_all(sim->win);
 
 
     //MPI_Request get_req;
@@ -709,7 +729,7 @@ void mmu_t::load_slow_path(reg_t addr, reg_t len, uint8_t* bytes)
     if (tracer.interested_in_range(paddr, paddr + PGSIZE, LOAD))
       tracer.trace(paddr, len, LOAD);
     else
-      refill_tlb(addr, paddr, host_addr, LOAD);
+      ;//refill_tlb(addr, paddr, host_addr, LOAD);
   } else if (!sim->mmio_load(paddr, len, bytes)) {
     throw trap_load_access_fault(addr);
   }
@@ -746,7 +766,7 @@ void mmu_t::store_slow_path(reg_t addr, reg_t len, const uint8_t* bytes)
     if (tracer.interested_in_range(paddr, paddr + PGSIZE, STORE))
       tracer.trace(paddr, len, STORE);
     else
-      refill_tlb(addr, paddr, host_addr, STORE);
+      ;//refill_tlb(addr, paddr, host_addr, STORE);
   } else if (!sim->mmio_store(paddr, len, bytes)) {
     throw trap_store_access_fault(addr);
   }
