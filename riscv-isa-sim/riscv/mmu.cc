@@ -467,7 +467,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 
     if(MPI_SUCCESS != MPI_Win_flush(target, sim->win))
 			printf( "\033[1m\033[31m SPIKE: MPI_FLUSH FAILED\n \x1B[0m");
-    //MPI_Win_flush_all(sim->win);
+    MPI_Win_flush_all(sim->win);
 
 
 #if 0

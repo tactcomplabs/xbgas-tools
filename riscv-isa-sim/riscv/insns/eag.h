@@ -1,3 +1,4 @@
+#define DEBUG 1
 require_rv64;
 #ifdef DEBUG
 	std::cout << "Calling EAG instruction" << std::endl;

@@ -22,6 +22,7 @@
 #define PGSHIFT 12
 #endif
 
+#define DEBUG 1
 
 extern int64_t insn_check;
 extern int64_t check_accum;
@@ -531,8 +532,8 @@ struct vm_info {
 inline vm_info decode_vm_info(int xlen, reg_t prv, reg_t sptbr)
 {
 #ifdef DEBUG
-  std::cout << "sptbr value is "<< std::hex << sptbr << std::endl;
-  std::cout << "xlen is " << xlen <<std::endl; 
+  //std::cout << "sptbr value is "<< std::hex << sptbr << std::endl;
+  //std::cout << "xlen is " << xlen <<std::endl; 
 #endif
   if (prv == PRV_M) {
     return {0, 0, 0, 0};
@@ -555,5 +556,5 @@ inline vm_info decode_vm_info(int xlen, reg_t prv, reg_t sptbr)
     abort();
   }
 }
-
+#undef DEBUG
 #endif
