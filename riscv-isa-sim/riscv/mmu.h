@@ -22,7 +22,7 @@
 #define PGSHIFT 12
 #endif
 
-#define DEBUG 1
+#undef DEBUG
 
 extern int64_t insn_check;
 extern int64_t check_accum;
@@ -43,11 +43,6 @@ extern int64_t		EAG_ne;
 extern int64_t		EAG_addr;
 extern int64_t		EAG_stride;
 extern int64_t		EAG_flag;
-
-
-
-
-
 
 typedef __int128 int128_t;
 typedef unsigned __int128 uint128_t;
@@ -206,7 +201,7 @@ public:
 
 	void insn_checkpoint_open()
 	{
-		insn_check = 0;	
+		insn_check = 0;
 		ic_check = 0;
 	}
 	void insn_checkpoint_close()
@@ -220,7 +215,7 @@ public:
 	  	MPI_Reduce(&ic_check, &check_buf, 1, MPI_LONG_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
 			if(!sim->get_rank())
 				printf("---SPIKE--- I-Cache Checkpoint = %ld\n", ic_check);
-				
+
 			  check_accum+=check_buf;
 				check_buf = 0;
 		}
@@ -228,7 +223,7 @@ public:
 			printf("---SPIKE--- Thread %d, Instruction Checkpoint = %ld\n", sim->get_rank(), insn_check);
 		}
 		*/
-		insn_check = 0;	
+		insn_check = 0;
 		ic_check = 0;
 	}
 
@@ -315,10 +310,10 @@ public:
 
 
 
-      //if (addr & (sizeof(type##_t)-1)) 
-        //throw trap_store_address_misaligned(addr); 
+      //if (addr & (sizeof(type##_t)-1))
+        //throw trap_store_address_misaligned(addr);
 			//printf("Target = %ld, addr = %lu, bytes = %lu\n", target, addr, val);
-    //template<typename op> 
+    //template<typename op>
   // template for functions that perform an remote atomic memory operation
 	#define xbgas_amo_func(type)\
     type##_t xbgas_amo_##type(reg_t upper, reg_t addr, type##_t val, std::string operation) { \
@@ -329,7 +324,7 @@ public:
 			type##_t results = 0;\
 			remote_amo(target,addr,sizeof(type##_t), (uint8_t*)&val, operation, (uint8_t*)&results );\
 			return results;\
-		}	
+		}
 
 
 	xbgas_amo_func(uint64)
@@ -344,7 +339,7 @@ public:
       }\
 			remote_amo(target,addr,sizeof(type##_t), (uint8_t*)&val, operation, (uint8_t*)results );\
 			return results;\
-		}	
+		}
 	xbgas_cas_func(uint64)
 	xbgas_cas_func(uint32)
 
@@ -533,7 +528,7 @@ inline vm_info decode_vm_info(int xlen, reg_t prv, reg_t sptbr)
 {
 #ifdef DEBUG
   //std::cout << "sptbr value is "<< std::hex << sptbr << std::endl;
-  //std::cout << "xlen is " << xlen <<std::endl; 
+  //std::cout << "xlen is " << xlen <<std::endl;
 #endif
   if (prv == PRV_M) {
     return {0, 0, 0, 0};
