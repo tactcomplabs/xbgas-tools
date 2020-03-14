@@ -367,9 +367,24 @@ void sim_t::make_dtb()
 
 char* sim_t::addr_to_mem(reg_t addr) {
   auto desc = bus.find_device(addr);
+#ifdef DEBUG
+	if(EAG_flag) std::cout << "DEBUG::  enter addr_to_mem()\n";
+	if(EAG_flag && desc.second==NULL) std::cout << "DEBUG::  device not found\n";
+#endif
   if (auto mem = dynamic_cast<mem_t*>(desc.second))
-    if (addr - desc.first < mem->size())
+    if (addr - desc.first < mem->size()){
+#ifdef DEBUG
+			if(EAG_flag)
+				std::cout << "DEBUG::  Real memory address is 0x" 
+				<< std::hex << reg_t(mem->contents() + (addr - desc.first)) 
+				<< std::endl;
+#endif
       return mem->contents() + (addr - desc.first);
+	}
+
+#ifdef DEBUG
+	if(EAG_flag) std::cout << "DEBUG::  addr_to_mem failed, NULL pointer is returned\n";
+#endif
   return NULL;
 }
 
