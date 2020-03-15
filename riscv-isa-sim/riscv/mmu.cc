@@ -335,7 +335,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
   auto host_addr = sim->addr_to_mem(paddr);
 	auto src_addr 	= host_addr;
 
-  std::cout << "Thread " << rank << " xbgas store starts\n";
+  //std::cout << "Thread " << rank << " xbgas store starts\n";
 	// Check if aggregation is enabled
 
 	//reg_t rest				= EAG_ne;
@@ -487,7 +487,11 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 
 					//host_addr = sim->addr_to_mem(translate_remote(addr));
 					//host_addr = sim->addr_to_mem(translate(addr, LOAD));
-					std::cout << "DEBUG::  Rest elements =  "<< std::dec<< EAG_ne << "\n";
+					std::cout << "DEBUG::  Thread "		<< rank 
+										<< ", Target  = "				<< target 
+										<< ", Rest elements = "	<< std::dec 
+										<< EAG_ne << "\n";
+					
 					// agg_buf = NULL;
 					addr+=len;
 					EAG_addr+=len;
@@ -584,6 +588,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 			EAG_addr 	= 0;
 			EAG_flag 	= 0;
 			EAG_ne	 	= 0;
+			std::cout << "DEBUG::  Thread " << rank << ", Aggregation Store Completes\n";
 			//agg_buf   = NULL;
 		}
 
@@ -648,6 +653,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 		// record the remote base addr in case of traps
 		trap_addr = addr;
 
+		std::cout << "DEBUG::  Thread " << rank << ", Aggregation Loads\n";
 		if(!same_addr)
        dest_addr  = sim->addr_to_mem(translate(EAG_addr,STORE));
 		// dest_addr 	= sim->addr_to_mem(translate(EAG_addr, STORE));
@@ -714,8 +720,8 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 
 
 				EAG_ne--;
-				addr+=len;
-				EAG_addr+=len;
+				addr			+=len;
+				EAG_addr	+=len;
 
 				// record the remote base addr in case of traps
 				trap_addr = addr;
@@ -728,7 +734,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 					std::cout << "DEBUG::  \033[1m\033[34m Translation completes \x1B[0m \n";
 				}
 
-				// If src & dest addr are not the identical
+				// If src & dest addr are not identical
 				if(!same_addr){
 					// Translate local dest address when crossing the page boundary
 					// We assume the requests are well-aligned
@@ -751,8 +757,9 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 			EAG_flag 			= 0;
 			EAG_ne	 			= 0;
 			//agg_buf				= NULL;
+			std::cout << "DEBUG::  Thread " << rank << ", Aggregation Load Completes\n";
 	 }
-	 else if(!EAG_flag){
+	 else{
 
 
 		MPI_Win_lock_all(0, sim->win);
