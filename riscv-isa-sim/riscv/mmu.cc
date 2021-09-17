@@ -6,7 +6,7 @@
 #include <mpi.h>
 #include <iostream>
 //#define DEBUG
-#undef DEBUG
+//#undef DEBUG
 
 int64_t amo_insn = 0;
 int64_t amo_add = 0;
@@ -158,14 +158,14 @@ tlb_entry_t mmu_t::fetch_slow_path(reg_t vaddr)
   reg_t paddr = translate(vaddr, FETCH);
   // host_addr is the real address (va) in the allocted memory
   if (auto host_addr = sim->addr_to_mem(paddr)) {
-		if(EAG_debug)
-			std::cout << "DEBUG:: Thread " <<sim->myid <<", insn_vaddr = "<<std::hex
-			<<vaddr<< ", address translation succeeded\n";
+		//if(EAG_debug)
+			//std::cout << "DEBUG:: Thread " <<sim->myid <<", insn_vaddr = "<<std::hex
+			//<<vaddr<< ", address translation succeeded\n";
     return refill_tlb(vaddr, paddr, host_addr, FETCH);
   } else {
-		if(EAG_debug)
-			std::cout << "DEBUG:: Thread " <<sim->myid <<", insn_vaddr = "<<std::hex
-			<<vaddr<< ", address translation failed\n";
+		//if(EAG_debug)
+			//std::cout << "DEBUG:: Thread " <<sim->myid <<", insn_vaddr = "<<std::hex
+			//<<vaddr<< ", address translation failed\n";
     if (!sim->mmio_load(paddr, sizeof fetch_temp, (uint8_t*)&fetch_temp))
       throw trap_instruction_access_fault(vaddr);
     tlb_entry_t entry = {(char*)&fetch_temp - vaddr, paddr - vaddr};
@@ -346,7 +346,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 		if(!same_addr)
 			src_addr 	= sim->addr_to_mem(translate(EAG_addr,LOAD));
 
-		std::cout << "DEBUG::  Thread " << rank << ", Aggregation Stores\n";
+		//std::cout << "DEBUG::  Thread " << rank << ", Aggregation Stores\n";
 		// src_addr 	= sim->addr_to_mem(translate(EAG_addr,LOAD));
 		// len 					= 	EAG_ne*len;
 		// Copy the data from one or multiple pages into the buffer
@@ -487,10 +487,10 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 
 					//host_addr = sim->addr_to_mem(translate_remote(addr));
 					//host_addr = sim->addr_to_mem(translate(addr, LOAD));
-					std::cout << "DEBUG::  Thread "		<< rank 
+					/*std::cout << "DEBUG::  Thread "		<< rank 
 										<< ", Target  = "				<< target 
 										<< ", Rest elements = "	<< std::dec 
-										<< EAG_ne << "\n";
+										<< EAG_ne << "\n";*/
 					
 					// agg_buf = NULL;
 					addr+=len;
@@ -588,7 +588,7 @@ void mmu_t::store_remote_path(int64_t target, reg_t addr,
 			EAG_addr 	= 0;
 			EAG_flag 	= 0;
 			EAG_ne	 	= 0;
-			std::cout << "DEBUG::  Thread " << rank << ", Aggregation Store Completes\n";
+			//std::cout << "DEBUG::  Thread " << rank << ", Aggregation Store Completes\n";
 			//agg_buf   = NULL;
 		}
 
@@ -653,7 +653,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 		// record the remote base addr in case of traps
 		trap_addr = addr;
 
-		std::cout << "DEBUG::  Thread " << rank << ", Aggregation Loads\n";
+		//std::cout << "DEBUG::  Thread " << rank << ", Aggregation Loads\n";
 		if(!same_addr)
        dest_addr  = sim->addr_to_mem(translate(EAG_addr,STORE));
 		// dest_addr 	= sim->addr_to_mem(translate(EAG_addr, STORE));
@@ -707,7 +707,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 
 			while(EAG_ne)
 			{
-				std::cout << "DEBUG::  Rest elements =  "<< std::dec<< EAG_ne << "\n";
+				//std::cout << "DEBUG::  Rest elements =  "<< std::dec<< EAG_ne << "\n";
 				
 				// update dest_addr and host_addr in each itereation
 				MPI_Win_lock_all(0, sim->win);
@@ -729,9 +729,9 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 				if((addr&0xfff) != 0)
 					host_addr	+= len;
 				else{
-					std::cout << "DEBUG::  \033[1m\033[32m translate remote base address \x1B[0m \n";
+				//	std::cout << "DEBUG::  \033[1m\033[32m translate remote base address \x1B[0m \n";
 					host_addr = sim->addr_to_mem(translate(addr, LOAD));
-					std::cout << "DEBUG::  \033[1m\033[34m Translation completes \x1B[0m \n";
+				//	std::cout << "DEBUG::  \033[1m\033[34m Translation completes \x1B[0m \n";
 				}
 
 				// If src & dest addr are not identical
@@ -741,9 +741,9 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 					if((EAG_addr&0xfff) != 0)
 						dest_addr	+= len;
 					else{
-						std::cout << "DEBUG::  \033[1m\033[32m translate local dest address \x1B[0m \n";
+				//		std::cout << "DEBUG::  \033[1m\033[32m translate local dest address \x1B[0m \n";
 						dest_addr 	= sim->addr_to_mem(translate(EAG_addr,STORE));
-						std::cout << "DEBUG::  \033[1m\033[34m Translation completes \x1B[0m \n";
+				//		std::cout << "DEBUG::  \033[1m\033[34m Translation completes \x1B[0m \n";
 					}
 				}
 				else
@@ -757,7 +757,7 @@ void mmu_t::load_remote_path(int64_t target, reg_t addr,
 			EAG_flag 			= 0;
 			EAG_ne	 			= 0;
 			//agg_buf				= NULL;
-			std::cout << "DEBUG::  Thread " << rank << ", Aggregation Load Completes\n";
+			//std::cout << "DEBUG::  Thread " << rank << ", Aggregation Load Completes\n";
 	 }
 	 else{
 
@@ -1127,4 +1127,3 @@ void mmu_t::register_memtracer(memtracer_t* t)
   tracer.hook(t);
 }
 
-#undef DEBUG
