@@ -42,6 +42,7 @@ extern int64_t		EAG_ne;
 extern uint64_t		EAG_addr;
 extern int64_t		EAG_stride;
 extern int64_t		EAG_flag;
+extern int64_t		trap_flag;
 
 
 
