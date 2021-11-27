@@ -1,6 +1,6 @@
-[submodule "xbgas-llvm"]
-	path = xbgas-llvm
-	url = https://github.com/BrodyWilliams/xbgas-llvm.git
 [submodule "xbgas-gnu-toolchain"]
 	path = xbgas-gnu-toolchain
 	url = https://github.com/tactcomplabs/xbgas-gnu-toolchain.git
+[submodule "xbgas-llvm"]
+	path = xbgas-llvm
+	url = https://github.com/BrodyWilliams/xbgas-llvm.git
