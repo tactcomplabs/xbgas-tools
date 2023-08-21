@@ -49,6 +49,28 @@ test_ ## testnum: \
       inst x30, x1, SEXT_IMM(imm); \
     )
 
+#define TEST_IMM_OP_ERD( testnum, inst, result, val1, imm ) \
+    TEST_CASE( testnum, x30, result, \
+      li  x1, MASK_XLEN(val1); \
+      inst e30, x1, SEXT_IMM(imm); \
+      eaddi x30, e30, 0; \
+    )
+
+#define TEST_IMM_OP_ERS( testnum, inst, result, val1, imm ) \
+    TEST_CASE( testnum, x30, result, \
+      li  x1, MASK_XLEN(val1); \
+      eaddie e30, x1, 0; \
+      inst x30, e30, SEXT_IMM(imm); \
+    )
+
+#define TEST_IMM_OP_ERDS( testnum, inst, result, val1, imm ) \
+    TEST_CASE( testnum, x30, result, \
+      li  x1, MASK_XLEN(val1); \
+      eaddie e1, x1, 0; \
+      inst e30, e1, SEXT_IMM(imm); \
+      eaddi x30, e30, 0; \
+    )
+
 #define TEST_IMM_SRC1_EQ_DEST( testnum, inst, result, val1, imm ) \
     TEST_CASE( testnum, x1, result, \
       li  x1, MASK_XLEN(val1); \
