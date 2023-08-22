@@ -1,3 +1,6 @@
 [submodule "riscv-isa-sim"]
 	path = riscv-isa-sim
-	url = https://github.com/riscv/riscv-isa-sim.git
+	url = https://github.com/tactcomplabs/xbgas-isa-sim.git
+[submodule "riscv-opcodes"]
+	path = riscv-opcodes
+	url = https://github.com/tactcomplabs/xbgas-opcodes.git
