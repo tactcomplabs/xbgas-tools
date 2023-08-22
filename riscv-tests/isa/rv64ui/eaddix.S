@@ -12,12 +12,12 @@ RVTEST_RV64U
 RVTEST_CODE_BEGIN
 
   TEST_IMM_OP_ERDS( 2,  eaddix, -32, 0, -32 );
-  TEST_IMM_OP_ERDS( 2,  eaddix, -48, -32, -16 );
-  TEST_IMM_OP_ERDS( 2,  eaddix, -54, -48, -8 );
-  TEST_IMM_OP_ERDS( 2,  eaddix, -54, -54, 0 );
-  TEST_IMM_OP_ERDS( 2,  eaddix, -48, -54, 8 );
-  TEST_IMM_OP_ERDS( 2,  eaddix, -32, -48, 16 );
-  TEST_IMM_OP_ERDS( 2,  eaddix, -0, -32, 32 );
+  TEST_IMM_OP_ERDS( 3,  eaddix, -48, -32, -16 );
+  TEST_IMM_OP_ERDS( 4,  eaddix, -54, -48, -8 );
+  TEST_IMM_OP_ERDS( 5,  eaddix, -54, -54, 0 );
+  TEST_IMM_OP_ERDS( 6,  eaddix, -48, -54, 8 );
+  TEST_IMM_OP_ERDS( 7,  eaddix, -32, -48, 16 );
+  TEST_IMM_OP_ERDS( 8,  eaddix, -0, -32, 32 );
 
   TEST_PASSFAIL
 
