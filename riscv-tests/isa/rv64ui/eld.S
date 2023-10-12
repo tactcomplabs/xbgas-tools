@@ -39,15 +39,13 @@ RVTEST_CODE_BEGIN
   # Test with a negative base
 
   TEST_CASE( 10, x5, 0x00ff00ff00ff00ff, \
-    li x1, 0; \
-    eaddie e1, x1, 0; \
+    SET_REMOTE_ADDR(e1, 0) \
     la  x1, tdat; \
     addi x1, x1, -32; \
     eld x5, 32(x1); \
   )
   TEST_CASE( 110, x5, 0x00ff00ff00ff00ff, \
-    li x1, 1; \
-    eaddie e1, x1, 0; \
+    SET_REMOTE_ADDR(e1, 1) \
     la  x1, tdat; \
     addi x1, x1, -32; \
     eld x5, 32(x1); \
@@ -56,15 +54,13 @@ RVTEST_CODE_BEGIN
   # Test with unaligned base
 
   TEST_CASE( 11, x5, 0xff00ff00ff00ff00, \
-    li x1, 0; \
-    eaddie e1, x1, 0; \
+    SET_REMOTE_ADDR(e1, 0) \
     la  x1, tdat; \
     addi x1, x1, -3; \
     eld x5, 11(x1); \
    )
   TEST_CASE( 111, x5, 0xff00ff00ff00ff00, \
-    li x1, 1; \
-    eaddie e1, x1, 0; \
+    SET_REMOTE_ADDR(e1, 1) \
     la  x1, tdat; \
     addi x1, x1, -3; \
     eld x5, 11(x1); \
@@ -93,31 +89,27 @@ RVTEST_CODE_BEGIN
   #-------------------------------------------------------------
 
   TEST_CASE( 18, x2, 2, \
-    li x1, 0; \
-    eaddie e1, x1, 0; \
+    SET_REMOTE_ADDR(e5, 0) \
     la  x5, tdat; \
     eld  x2, 0(x5); \
     li  x2, 2; \
   )
   TEST_CASE( 118, x2, 2, \
-    li x1, 1; \
-    eaddie e1, x1, 0; \
+    SET_REMOTE_ADDR(e5, 1) \
     la  x5, tdat; \
     eld  x2, 0(x5); \
     li  x2, 2; \
   )
 
   TEST_CASE( 19, x2, 2, \
-    li x1, 0; \
-    eaddie e1, x1, 0; \
+    SET_REMOTE_ADDR(e5, 0) \
     la  x5, tdat; \
     eld  x2, 0(x5); \
     nop; \
     li  x2, 2; \
   )
   TEST_CASE( 119, x2, 2, \
-    li x1, 1; \
-    eaddie e1, x1, 0; \
+    SET_REMOTE_ADDR(e5, 1) \
     la  x5, tdat; \
     eld  x2, 0(x5); \
     nop; \
