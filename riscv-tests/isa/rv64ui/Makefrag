@@ -21,8 +21,10 @@ rv64ui_sc_tests = \
 	sub subw \
 	xor xori \
 	eaddi eaddie eaddix \
-	eld elw elh elhu elb elbu ele\
-	esd esw esh esb ese\
+	eld elw elh elhu elb elbu ele \
+	erld erlw erlh erlhu erlb erlbu erle\
+	esd esw esh esb ese \
+	ersd ersw ersh ersb erse \
 
 rv64ui_p_tests = $(addprefix rv64ui-p-, $(rv64ui_sc_tests))
 rv64ui_v_tests = $(addprefix rv64ui-v-, $(rv64ui_sc_tests))

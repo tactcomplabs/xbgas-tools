@@ -2,19 +2,22 @@
 
 #define SET_REMOTE_ADDR( ereg, addr ) \
     li x1, addr; \
-    eaddie ereg, x1, 0;
+    eaddie ereg, x1, 0; \
 
 #define PRESET_MEM(inst, val, base, size, iter) \
-    SET_REMOTE_ADDR(e1, 1); \
+    SET_REMOTE_ADDR( e1, 1 ) \
     la x1, base; \
-    li x2, val; \
+    addi x6, x1, 0; \
+    li x2, MASK_XLEN(val); \
     li x3, 0; \
+    eaddie e6, x3, 0; \
     li x4, iter; \
     li x5, size; \
 1:  inst x2, 0(x1); \
+    inst x2, 0(x6); \
     addi x3, x3, 1; \
     add x1, x1, x5; \
-    bne x3, x4, 1b; \
+    bne x3, x4, 1b;
 
 
 #define TEST_ELD_OP( testnum, inst, result, offset, base, remote ) \
@@ -125,3 +128,223 @@ test_ ## testnum: \
     li  x5, 2; \
     bne x4, x5, 1b;
     
+#define TEST_ERLD_OP( testnum, inst, result, base, remote ) \
+    SET_REMOTE_ADDR( e2, remote ) \
+    TEST_CASE( testnum, x30, result, \
+      la  x1, base; \
+      inst x30, x1, e2; \
+    )
+
+#define TEST_ERLD_DEST_BYPASS( testnum, nop_cycles, inst, result, base, remote ) \
+    SET_REMOTE_ADDR( e2, remote ) \
+test_ ## testnum: \
+    li  TESTNUM, testnum; \
+    li  x4, 0; \
+1:  la  x1, base; \
+    inst x30, x1, e2; \
+    TEST_INSERT_NOPS_ ## nop_cycles \
+    addi  x6, x30, 0; \
+    li  x29, result; \
+    bne x6, x29, fail; \
+    addi  x4, x4, 1; \
+    li  x5, 2; \
+    bne x4, x5, 1b; \
+
+#define TEST_ERLD_SRC1_BYPASS( testnum, nop_cycles, inst, result, base, remote ) \
+    SET_REMOTE_ADDR( e2, remote ) \
+test_ ## testnum: \
+    li  TESTNUM, testnum; \
+    li  x4, 0; \
+1:  la  x1, base; \
+    TEST_INSERT_NOPS_ ## nop_cycles \
+    inst x30, x1, e2; \
+    li  x29, result; \
+    bne x30, x29, fail; \
+    addi  x4, x4, 1; \
+    li  x5, 2; \
+    bne x4, x5, 1b \
+
+#define TEST_ERLD_SRC2_BYPASS( testnum, nop_cycles, inst, result, base, remote ) \
+test_ ## testnum: \
+    li  TESTNUM, testnum; \
+    li  x4, 0; \
+1:  la  x1, base; \
+    eaddie e1, x4, remote; \
+    TEST_INSERT_NOPS_ ## nop_cycles \
+    inst x30, x1, e1; \
+    li  x29, result; \
+    bne x30, x29, fail; \
+    addi  x4, x4, 1; \
+    li  x5, 2; \
+    bne x4, x5, 1b; \
+
+#define TEST_ERLDE_OP( testnum, inst, result, base, remote ) \
+    SET_REMOTE_ADDR( e2, remote ) \
+    TEST_CASE( testnum, x30, result, \
+      la  x1, base; \
+      inst e30, x1, e2; \
+      eaddi x30, e30, 0; \
+    )
+
+#define TEST_ERLDE_DEST_BYPASS( testnum, nop_cycles, inst, result, base, remote ) \
+    SET_REMOTE_ADDR( e2, remote ) \
+test_ ## testnum: \
+    li  TESTNUM, testnum; \
+    li  x4, 0; \
+1:  la  x1, base; \
+    inst e30, x1, e2; \
+    TEST_INSERT_NOPS_ ## nop_cycles \
+    eaddi  x6, e30, 0; \
+    li  x29, result; \
+    bne x6, x29, fail; \
+    addi  x4, x4, 1; \
+    li  x5, 2; \
+    bne x4, x5, 1b; \
+
+#define TEST_ERLDE_SRC1_BYPASS( testnum, nop_cycles, inst, result, base, remote ) \
+    SET_REMOTE_ADDR( e2, remote ) \
+test_ ## testnum: \
+    li  TESTNUM, testnum; \
+    li  x4, 0; \
+1:  la  x1, base; \
+    TEST_INSERT_NOPS_ ## nop_cycles \
+    inst e30, x1, e2; \
+    li  x29, result; \
+    eaddi x30, e30, 0; \
+    bne x30, x29, fail; \
+    addi  x4, x4, 1; \
+    li  x5, 2; \
+    bne x4, x5, 1b \
+
+#define TEST_ERLDE_SRC2_BYPASS( testnum, nop_cycles, inst, result, base, remote ) \
+test_ ## testnum: \
+    li  TESTNUM, testnum; \
+    li  x4, 0; \
+1:  la  x1, base; \
+    eaddie e1, x4, remote; \
+    TEST_INSERT_NOPS_ ## nop_cycles \
+    inst e30, x1, e1; \
+    li  x29, result; \
+    eaddi x30, e30, 0; \
+    bne x30, x29, fail; \
+    addi  x4, x4, 1; \
+    li  x5, 2; \
+    bne x4, x5, 1b; \
+
+#define TEST_ERST_OP( testnum, load_inst, store_inst, result, base, remote ) \
+    SET_REMOTE_ADDR( e1, remote ) \
+    TEST_CASE( testnum, x30, result, \
+      la  x1, base; \
+      li  x2, result; \
+      store_inst x2, x1, e1; \
+      load_inst x30, x1, e1; \
+    )
+
+#define TEST_ERST_SRC1_BYPASS( testnum, src1_nops, load_inst, store_inst, result, base, remote ) \
+    SET_REMOTE_ADDR( e2, remote ) \
+test_ ## testnum: \
+    li  TESTNUM, testnum; \
+    li  x4, 0; \
+    la  x2, base; \
+1:  li  x1, result; \
+    TEST_INSERT_NOPS_ ## src1_nops \
+    store_inst x1, x2, e2; \
+    load_inst x30, x2, e2; \
+    li  x29, result; \
+    bne x30, x29, fail; \
+    addi  x4, x4, 1; \
+    li  x5, 2; \
+    bne x4, x5, 1b \
+
+#define TEST_ERST_SRC2_BYPASS( testnum, src2_nops, load_inst, store_inst, result, base, remote ) \
+    SET_REMOTE_ADDR( e2, remote ) \
+test_ ## testnum: \
+    li  TESTNUM, testnum; \
+    li  x4, 0; \
+    li  x1, result; \
+1:  la  x2, base; \
+    TEST_INSERT_NOPS_ ## src2_nops \
+    store_inst x1, x2, e2; \
+    load_inst x30, x2, e2; \
+    li  x29, result; \
+    bne x30, x29, fail; \
+    addi  x4, x4, 1; \
+    li  x5, 2; \
+    bne x4, x5, 1b \
+
+#define TEST_ERST_SRC3_BYPASS( testnum, src3_nops, load_inst, store_inst, result, base, remote ) \
+test_ ## testnum: \
+    li  TESTNUM, testnum; \
+    li  x4, 0; \
+    la  x2, base; \
+    li x1, result; \
+1:  eaddie e2, x4, remote; \
+    TEST_INSERT_NOPS_ ## src3_nops \
+    store_inst x1, x2, e2; \
+    load_inst x30, x2, e2; \
+    li  x29, result; \
+    bne x30, x29, fail; \
+    addi  x4, x4, 1; \
+    li  x5, 2; \
+    bne x4, x5, 1b;
+
+#define TEST_ERSTE_OP( testnum, load_inst, store_inst, result, base, remote ) \
+    SET_REMOTE_ADDR( e1, remote ) \
+    TEST_CASE( testnum, x30, result, \
+      la  x1, base; \
+      li  x2, result; \
+      eaddie e2, x2, 0; \
+      store_inst e2, x1, e1; \
+      load_inst x30, x1, e1; \
+    )
+
+#define TEST_ERSTE_SRC1_BYPASS( testnum, src1_nops, load_inst, store_inst, result, base, remote ) \
+    SET_REMOTE_ADDR( e2, remote ) \
+test_ ## testnum: \
+    li  TESTNUM, testnum; \
+    li  x4, 0; \
+    la  x2, base; \
+    li  x1, result; \
+1:  eaddie e1, x1, 0; \
+    TEST_INSERT_NOPS_ ## src1_nops \
+    store_inst e1, x2, e2; \
+    load_inst x30, x2, e2; \
+    li  x29, result; \
+    bne x30, x29, fail; \
+    addi  x4, x4, 1; \
+    li  x5, 2; \
+    bne x4, x5, 1b \
+
+#define TEST_ERSTE_SRC2_BYPASS( testnum, src2_nops, load_inst, store_inst, result, base, remote ) \
+    SET_REMOTE_ADDR( e2, remote ) \
+test_ ## testnum: \
+    li  TESTNUM, testnum; \
+    li  x4, 0; \
+    li  x1, result; \
+    eaddie e1, x1, 0; \
+1:  la  x2, base; \
+    TEST_INSERT_NOPS_ ## src2_nops \
+    store_inst e1, x2, e2; \
+    load_inst x30, x2, e2; \
+    li  x29, result; \
+    bne x30, x29, fail; \
+    addi  x4, x4, 1; \
+    li  x5, 2; \
+    bne x4, x5, 1b \
+
+#define TEST_ERSTE_SRC3_BYPASS( testnum, src3_nops, load_inst, store_inst, result, base, remote ) \
+test_ ## testnum: \
+    li  TESTNUM, testnum; \
+    li  x4, 0; \
+    la  x2, base; \
+    li x1, result; \
+    eaddie e1, x1, 0; \
+1:  eaddie e2, x4, remote; \
+    TEST_INSERT_NOPS_ ## src3_nops \
+    store_inst e1, x2, e2; \
+    load_inst x30, x2, e2; \
+    li  x29, result; \
+    bne x30, x29, fail; \
+    addi  x4, x4, 1; \
+    li  x5, 2; \
+    bne x4, x5, 1b;

@@ -461,7 +461,7 @@
 #define MASK_ESD  0x707f
 #define MATCH_ESQ 0x407b
 #define MASK_ESQ  0x707f
-#define MATCH_ESE 0x507b
+#define MATCH_ESE 0x707b
 #define MASK_ESE  0x707f
 #define MATCH_ERLB 0xaa000033
 #define MASK_ERLB  0xfe00707f
@@ -475,7 +475,7 @@
 #define MASK_ERLBU  0xfe00707f
 #define MATCH_ERLHU 0xaa005033
 #define MASK_ERLHU  0xfe00707f
-#define MATCH_ERLE 0x42004033
+#define MATCH_ERLE 0xaa007033
 #define MASK_ERLE  0xfe00707f
 #define MATCH_ERSB 0x44000033
 #define MASK_ERSB  0xfe00707f
@@ -485,11 +485,11 @@
 #define MASK_ERSW  0xfe00707f
 #define MATCH_ERSD 0x44003033
 #define MASK_ERSD  0xfe00707f
-#define MATCH_ERSE 0x46003033
+#define MATCH_ERSE 0x44007033
 #define MASK_ERSE  0xfe00707f
 #define MATCH_EADDI 0x607b
 #define MASK_EADDI  0x707f
-#define MATCH_EADDIE 0x707b
+#define MATCH_EADDIE  0x507b
 #define MASK_EADDIE  0x707f
 #define MATCH_EADDIX 0x7003
 #define MASK_EADDIX  0x707f
