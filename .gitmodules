@@ -1,6 +1,0 @@
-[submodule "riscv-isa-sim"]
-	path = riscv-isa-sim
-	url = git@github.com:tactcomplabs/xbgas-isa-sim.git
-[submodule "riscv-opcodes"]
-	path = riscv-opcodes
-	url = https://github.com/tactcomplabs/xbgas-opcodes.git
