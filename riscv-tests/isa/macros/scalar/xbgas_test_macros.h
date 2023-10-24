@@ -19,6 +19,27 @@
     add x1, x1, x5; \
     bne x3, x4, 1b;
 
+#define TEST_EADDI_OP( testnum, result, val, imm )\
+  TEST_CASE( testnum, x30, result, \
+      li x1, MASK_XLEN(val); \
+      eaddie e0, x1, 0; \
+      eaddi x30, e0, SEXT_IMM(imm); \
+    )
+
+#define TEST_EADDIE_OP( testnum, result, val, imm )\
+  TEST_CASE( testnum, x30, result, \
+      li  x1, MASK_XLEN(val); \
+      eaddie e0, x1, SEXT_IMM(imm); \
+      eaddi x30, e0, 0; \
+    )
+
+#define TEST_EADDIX_OP( testnum, result, val, imm )\
+  TEST_CASE( testnum, x30, result, \
+      li  x1, MASK_XLEN(val); \
+      eaddie e0, x1, 0; \
+      eaddix e30, e0, SEXT_IMM(imm); \
+      eaddi x30, e30, 0; \
+    )
 
 #define TEST_ELD_OP( testnum, inst, result, offset, base, remote ) \
     SET_REMOTE_ADDR( e1, remote ) \

@@ -7,17 +7,24 @@
 
 #include "riscv_test.h"
 #include "test_macros.h"
+#include "xbgas_test_macros.h"
 
 RVTEST_RV64U
 RVTEST_CODE_BEGIN
 
-  TEST_IMM_OP_ERD( 2,  eaddie, -32, 0, -32 );
-  TEST_IMM_OP_ERD( 3,  eaddie, -48, -32, -16 );
-  TEST_IMM_OP_ERD( 4,  eaddie, -56, -48, -8 );
-  TEST_IMM_OP_ERD( 5,  eaddie, -56, -56, 0 );
-  TEST_IMM_OP_ERD( 6,  eaddie, -48, -56, 8 );
-  TEST_IMM_OP_ERD( 7,  eaddie, -32, -48, 16 );
-  TEST_IMM_OP_ERD( 8,  eaddie, -0, -32, 32 );
+  TEST_EADDIE_OP( 2, -32, 0, -32 );
+  TEST_EADDIE_OP( 3, -48, -32, -16 );
+  TEST_EADDIE_OP( 4, -56, -48, -8 );
+  TEST_EADDIE_OP( 5, -56, -56, 0 );
+  TEST_EADDIE_OP( 6, -48, -56, 8 );
+  TEST_EADDIE_OP( 7, -32, -48, 16 );
+  TEST_EADDIE_OP( 8, -0, -32, 32 );
+
+  TEST_CASE( 9, x30, 19, \
+    li x1, 19; \
+    moveeb e1, x1; \
+    eaddi x30, e1, 0; \
+  )
 
   TEST_PASSFAIL
 

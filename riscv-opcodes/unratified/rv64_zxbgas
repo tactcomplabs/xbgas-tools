@@ -1,0 +1,9 @@
+#extended rv64 load operations. I type
+eld    rd       rs1 imm12           14..12=3 6..0=0x77
+
+#extended rv64 store operations. S type
+esd    imm12hi  rs1 rs2 imm12lo     14..12=3 6..0=0x7B
+
+#rv64 raw integer load/store instructions. R type
+erld   rd       rs1 rs2 31..25=0x55 14..12=3 6..0=0x33
+ersd   rd       rs1 rs2 31..25=0x22 14..12=3 6..0=0x33

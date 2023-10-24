@@ -1,0 +1,4 @@
+#extended quad load. I type
+elq    rd       rs1 imm12           14..12=6 6..0=0x77
+#extended quad store. S type
+esq    imm12hi  rs1 rs2 imm12lo     14..12=4 6..0=0x7B
