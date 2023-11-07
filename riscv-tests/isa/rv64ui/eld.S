@@ -116,6 +116,37 @@ RVTEST_CODE_BEGIN
     li  x2, 2; \
   )
 
+  #----------
+  # Successive loads
+  #----------
+
+  TEST_CASE(121, x4, 0xf00ff00ff00ff00f, \
+    SET_REMOTE_ADDR(e8, 1) \
+    la x8, tdat; \
+    eld x4, 0(x8); \
+    eld x4, 8(x8); \
+    eld x4, 16(x8); \
+    eld x4, 24(x8); \
+  )
+  
+  TEST_CASE(120, x2, 2, \
+    SET_REMOTE_ADDR(e8, 1) \
+    la x8, tdat; \
+    eld x4, 0(x8); \
+    eld x5, 8(x8); \
+    eld x6, 16(x8); \
+    eld x7, 24(x8); \
+    srai x7, x7, 4; \
+    bne x7, x5, fail; \
+    srli x7, x7, 4; \
+    bne x7, x6, fail; \
+    srli x7, x7, 4; \
+    bne x7, x4, fail; \
+    li x2, 2; \
+  )
+
+
+
   TEST_PASSFAIL
 
 RVTEST_CODE_END

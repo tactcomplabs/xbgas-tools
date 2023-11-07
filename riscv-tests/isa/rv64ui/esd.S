@@ -109,6 +109,53 @@ RVTEST_CODE_BEGIN
   TEST_EST_SRC21_BYPASS( 122, 1, 1, eld, esd, 0x22330011, 32, tdat, 1 );
   TEST_EST_SRC21_BYPASS( 123, 2, 0, eld, esd, 0x12233001, 40, tdat, 1 );
 
+  #--------
+  # successive store
+  #--------
+
+  TEST_CASE(124, x2, 2, \
+    SET_REMOTE_ADDR(e8, 1) \
+    la x8, tdat; \
+    li x4, 0xaaaa; \
+    esd x4, 0(x8); \
+    esd x4, 8(x8); \
+    esd x4, 16(x8); \
+    esd x4, 24(x8); \
+    eld x5, 0(x8); \
+    eld x6, 8(x8); \
+    eld x7, 16(x8); \
+    eld x9, 24(x8); \
+    bne x4, x5, fail; \
+    bne x4, x6, fail; \
+    bne x4, x7, fail; \
+    bne x4, x9, fail; \
+    li x2, 2; \
+  )
+
+  TEST_CASE(125, x2, 2, \
+    SET_REMOTE_ADDR(e8, 1) \
+    la x8, tdat; \
+    li x4, 0xf000; \
+    li x5, 0x0f00; \
+    li x6, 0x00f0; \
+    li x7, 0x000 f; \
+    esd x4, 24(x8); \
+    eld x4, 24(x8); \
+    esd x5, 16(x8); \
+    eld x5, 16(x8); \
+    esd x6, 8(x8); \
+    eld x6, 8(x8); \
+    esd x7, 0(x8); \
+    eld x7, 0(x8); \
+    srli x4, x4, 4; \
+    bne x4, x5, fail; \
+    srli x4, x4, 4; \
+    bne x4, x6, fail; \
+    srli x4, x4, 4; \
+    bne x4, x7, fail; \
+    li x2, 2; \
+  )
+
   TEST_PASSFAIL
 
 RVTEST_CODE_END
