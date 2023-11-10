@@ -138,7 +138,7 @@ RVTEST_CODE_BEGIN
     li x4, 0xf000; \
     li x5, 0x0f00; \
     li x6, 0x00f0; \
-    li x7, 0x000 f; \
+    li x7, 0x000f; \
     esd x4, 24(x8); \
     eld x4, 24(x8); \
     esd x5, 16(x8); \
