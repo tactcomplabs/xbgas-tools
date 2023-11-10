@@ -25,5 +25,5 @@
 int
 rename (const char *old, const char *new)
 {
-  return INLINE_SYSCALL (renameat, 4, AT_FDCWD, old, AT_FDCWD, new);
+  return INLINE_SYSCALL (renameat2, 4, AT_FDCWD, old, AT_FDCWD, new);
 }
