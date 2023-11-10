@@ -51,6 +51,8 @@ riscv_srcs = \
 	jtag_dtm.cc \
 	$(riscv_gen_srcs) \
 
+riscv_install_shared_lib = yes
+
 riscv_test_srcs =
 
 riscv_gen_hdrs = \

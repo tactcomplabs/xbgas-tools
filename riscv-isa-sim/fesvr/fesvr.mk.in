@@ -32,3 +32,5 @@ fesvr_srcs = \
 
 fesvr_install_prog_srcs = \
   elf2hex.cc \
+
+fesvr_install_shared_lib = yes
