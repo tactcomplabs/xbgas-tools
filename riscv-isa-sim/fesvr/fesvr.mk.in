@@ -1,4 +1,4 @@
-fesvr_hdrs = \
+fesvr_install_hdrs = \
   elf.h \
   elfloader.h \
   htif.h \
