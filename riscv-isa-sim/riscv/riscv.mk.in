@@ -26,6 +26,7 @@ riscv_install_hdrs = \
 	debug_module.h \
 	remote_bitbang.h \
 	jtag_dtm.h \
+	cfg.h \
 
 riscv_precompiled_hdrs = \
 	insn_template.h \
@@ -49,6 +50,7 @@ riscv_srcs = \
 	debug_module.cc \
 	remote_bitbang.cc \
 	jtag_dtm.cc \
+	cfg.cc \
 	$(riscv_gen_srcs) \
 
 riscv_install_shared_lib = yes

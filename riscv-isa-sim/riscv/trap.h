@@ -27,6 +27,8 @@ class mem_trap_t : public trap_t
  public:
   mem_trap_t(reg_t which, reg_t badaddr)
     : trap_t(which), badaddr(badaddr) {}
+  bool has_tval() {return has_badaddr(); }
+  bool get_tval() {return get_badaddr(); }
   bool has_badaddr() override { return true; }
   reg_t get_badaddr() override { return badaddr; }
  private:

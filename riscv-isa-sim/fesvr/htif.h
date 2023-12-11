@@ -12,7 +12,7 @@
 class htif_t
 {
  public:
-  htif_t(const std::vector<std::string>& target_args);
+  htif_t(int argc, char** argv);
   virtual ~htif_t();
 
   virtual void start();

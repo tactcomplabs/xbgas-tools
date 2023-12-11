@@ -22,7 +22,7 @@ class sim_t : public htif_t
 public:
   sim_t(const char* isa, size_t _nprocs,  bool halted, reg_t start_pc,
         std::vector<std::pair<reg_t, mem_t*>> mems,
-        const std::vector<std::string>& args,
+        int argc, char** argv,
 	int world_size, int myid, int xbgas, MPI_Win win);
   ~sim_t();
 

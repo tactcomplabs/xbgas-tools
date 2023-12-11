@@ -25,10 +25,10 @@ static void handle_signal(int sig)
 
 sim_t::sim_t(const char* isa, size_t nprocs, bool halted, reg_t start_pc,
              std::vector<std::pair<reg_t, mem_t*>> mems,
-             const std::vector<std::string>& args,
+             int argc, char** argv,
              int world_size, int rank,
              int xbgas, MPI_Win win)
-  : htif_t(args), debug_module(this), mems(mems),
+  : htif_t(argc,argv), debug_module(this), mems(mems),
     procs(std::max(nprocs, size_t(1))),
     start_pc(start_pc),
     current_step(0), current_proc(0), debug(false), remote_bitbang(NULL),

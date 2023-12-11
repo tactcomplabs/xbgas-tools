@@ -128,8 +128,7 @@ int main(int argc, char** argv)
     }
   });
 
-  auto argv1 = parser.parse(argv);
-  std::vector<std::string> htif_args(argv1, (const char*const*)argv + argc);
+  auto htif_argv = parser.parse(argv);
   mems = make_mems(memspec);
 #ifdef DEBUG
   std::cout<< "DEBUG::  Allocated memory address is 0x" << (reg_t)mems[0].second->contents() << std::hex << std::endl;  
@@ -166,7 +165,7 @@ int main(int argc, char** argv)
 
   //if(xbgas == true && shared_mem.first == NULL)
   //shared_mem = make_shared_mem("512");
-  sim_t s(isa, nprocs, halted, start_pc, mems, htif_args,
+  sim_t s(isa, nprocs, halted, start_pc, mems, argc, (char**) htif_argv,
           world_size, rank, xbgas, win);
 
   // Init OLB in each core
@@ -187,7 +186,7 @@ int main(int argc, char** argv)
     return 0;
   }
 
-  if (!*argv1)
+  if (!*htif_argv)
     help();
 
   if (ic && l2) ic->set_miss_handler(&*l2);
