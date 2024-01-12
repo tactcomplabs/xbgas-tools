@@ -4,13 +4,12 @@ elh    rd       rs1 imm12           14..12=1 6..0=0x77
 elhu   rd       rs1 imm12           14..12=5 6..0=0x77
 elb    rd       rs1 imm12           14..12=0 6..0=0x77
 elbu   rd       rs1 imm12           14..12=4 6..0=0x77
-ele    rd       rs1 imm12           14..12=7 6..0=0x77
+
 
 #extended rv store operations. S type
 esw    imm12hi  rs1 rs2 imm12lo     14..12=2 6..0=0x7B
 esh    imm12hi  rs1 rs2 imm12lo     14..12=1 6..0=0x7B
 esb    imm12hi  rs1 rs2 imm12lo     14..12=0 6..0=0x7B
-ese    imm12hi  rs1 rs2 imm12lo     14..12=7 6..0=0x7B
 
 #raw integer load/store instructions. R type
 erlw   rd       rs1 rs2 31..25=0x55 14..12=2 6..0=0x33
@@ -22,7 +21,6 @@ erle   rd       rs1 rs2 31..25=0x55 14..12=7 6..0=0x33
 ersw   rd       rs1 rs2 31..25=0x22 14..12=2 6..0=0x33
 ersh   rd       rs1 rs2 31..25=0x22 14..12=1 6..0=0x33
 ersb   rd       rs1 rs2 31..25=0x22 14..12=0 6..0=0x33
-erse   rd       rs1 rs2 31..25=0x22 14..12=7 6..0=0x33
 
 #address management instructions. I type
 eaddi  rd       rs1 imm12           14..12=6 6..0=0x7B

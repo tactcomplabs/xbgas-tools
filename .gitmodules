@@ -1,0 +1,6 @@
+[submodule "riscv-tools-feedstock"]
+	path = riscv-tools-feedstock
+	url = git@github.com:tactcomplabs/xbgas-tools-feedstock
+[submodule "riscv-isa-sim"]
+	path = riscv-isa-sim
+	url = git@github.com:tactcomplabs/xbgas-isa-sim
